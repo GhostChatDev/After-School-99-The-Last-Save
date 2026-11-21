@@ -1,27 +1,163 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#101827"><meta name="description" content="A short playable milestone of After School ’99"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml"><title>After School ’99: The Last Save</title>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>After School ’99: The Last Save</title>
+<meta name="theme-color" content="#11172c">
+<meta name="description" content="A nostalgic Snake-style adventure about the memories we carry forward.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 <style>
-:root{color-scheme:dark;--bg:#101827;--surface:#1b2b3c;--border:#546579;--text:#fff3db;--muted:#c0cbd0;--accent:#ffda88;--good:#83e6cf}*{box-sizing:border-box}body{margin:0;padding:16px;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,sans-serif}main{max-width:1000px;margin:auto}h1{font-size:clamp(1.5rem,4vw,2.5rem);margin:0}h2{margin:.2rem 0}.tag,.note{color:var(--muted)}.layout{display:grid;grid-template-columns:minmax(0,2fr) minmax(260px,1fr);gap:16px}.panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px}canvas{display:block;width:100%;height:auto;image-rendering:pixelated;border:2px solid var(--border);background:#102638}.status{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:8px}.message{min-height:5em;color:var(--accent)}button{font:inherit;color:var(--text);background:#32465b;border:1px solid #79899a;border-radius:8px;padding:10px 14px;min-height:44px;cursor:pointer}button:hover{background:#435e73}button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}button:disabled{opacity:.5;cursor:not-allowed}.actions{display:flex;flex-wrap:wrap;gap:8px}.pad{display:grid;grid-template-columns:repeat(3,56px);gap:6px;justify-content:center;margin:20px auto}.pad button{padding:0;min-width:56px;min-height:52px}.up{grid-column:2}.left{grid-column:1}.down{grid-column:2}.right{grid-column:3}@media(max-width:720px){.layout{grid-template-columns:1fr}body{padding:12px}.message{min-height:0}}
-</style></head><body><main><header><p class="tag">AN ORIGINAL LITTLE ADVENTURE</p><h1>After School ’99: The Last Save</h1><p class="tag">Some things are worth saving twice.</p></header><div class="layout"><section class="panel" aria-label="Game screen"><canvas id="board" width="576" height="432" aria-label="Grid map showing Pip, numbered memories, walls and a door"></canvas><div class="status"><strong id="stage"></strong><span id="objective"></span></div></section><aside class="panel"><h2 id="title"></h2><p id="story"></p><p id="message" class="message" aria-live="polite"></p><div class="actions"><button id="start">Start mission</button><button id="restart">Restart mission</button></div><div class="pad" aria-label="Movement controls"><button class="up" data-dir="up" aria-label="Move up">▲</button><button class="left" data-dir="left" aria-label="Move left">◀</button><button class="down" data-dir="down" aria-label="Move down">▼</button><button class="right" data-dir="right" aria-label="Move right">▶</button></div><p class="note">Arrow keys or WASD to move, one square per press. Collect memories in order, then reach the door. Progress stays on this browser.</p><p class="note">This is a short playable milestone, not the complete planned campaign.</p></aside></div></main>
+:root{--bg:#11172c;--panel:#1b2442;--border:#3a4a86;--text:#f2f0e6;--muted:#b4bad4;--accent:#ffd84a;--pip:#4dffb5;--danger:#ff6b81;--r:10px}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font:16px/1.5 "Trebuchet MS",Verdana,sans-serif}
+body{display:flex;flex-direction:column;align-items:center;padding:12px;padding-bottom:max(12px,env(safe-area-inset-bottom));gap:10px}
+h1{font:700 20px/1.2 "Courier New",monospace;letter-spacing:1px;margin:0;color:var(--accent);text-align:center}
+.shell{width:100%;max-width:640px;display:flex;flex-direction:column;gap:10px}
+.hud{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;font:700 15px "Courier New",monospace}
+.hud span{background:var(--panel);border:2px solid var(--border);border-radius:var(--r);padding:4px 10px}
+.stage{position:relative;border:3px solid var(--border);border-radius:var(--r);background:#0a0f20;overflow:hidden}
+canvas{display:block;width:100%;height:auto;image-rendering:pixelated;touch-action:none}
+.stage::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.14) 0 1px,transparent 1px 3px)}
+.card{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:12px;padding:20px;text-align:center;background:rgba(10,15,32,.93)}
+.card h2{margin:0;font:700 24px/1.2 "Courier New",monospace;color:var(--accent)}
+.card p{margin:0;max-width:44ch;color:var(--text)}
+.card .tag{color:var(--pip);font-style:italic}
+.row{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+button{min-height:44px;min-width:44px;padding:8px 16px;font:700 16px "Courier New",monospace;color:var(--bg);background:var(--accent);border:0;border-radius:var(--r);cursor:pointer;box-shadow:0 3px 0 #a38a1d;transition:transform .12s,filter .12s}
+button:hover{filter:brightness(1.1)}button:active{transform:translateY(2px);box-shadow:0 1px 0 #a38a1d}
+button:focus-visible{outline:3px solid #fff;outline-offset:2px}
+button.ghost{background:var(--panel);color:var(--text);border:2px solid var(--border);box-shadow:none}
+.pad{display:none;grid-template-columns:repeat(3,64px);grid-template-rows:repeat(2,56px);gap:6px;justify-content:center}
+.pad button{font-size:22px;padding:0}.pad .u{grid-column:2;grid-row:1}.pad .l{grid-column:1;grid-row:2}.pad .d{grid-column:2;grid-row:2}.pad .r{grid-column:3;grid-row:2}
+@media (pointer:coarse),(max-width:700px){.pad{display:grid}}
+#toast{min-height:24px;text-align:center;color:var(--muted);font-size:14px}
+.hidden{display:none!important}
+.help{color:var(--muted);font-size:13px;text-align:center}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style></head>
+<body>
+<h1>AFTER SCHOOL ’99: THE LAST SAVE</h1>
+<main class="shell">
+  <div id="game" class="hidden">
+    <div class="hud" style="margin-bottom:10px">
+      <span id="hMission">Mission 1/8</span><span id="hMem">Memories 0/0</span>
+      <span class="row"><button class="ghost" id="bRestart" aria-label="Restart mission">Restart</button><button class="ghost" id="bMode">Mode: Step</button><button class="ghost" id="bSound">Sound: On</button><button class="ghost" id="bMenu">Menu</button></span>
+    </div>
+  </div>
+  <div class="stage" id="stage">
+    <canvas id="cv" width="440" height="360" aria-label="Game board"></canvas>
+    <div class="card" id="card"></div>
+  </div>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <div class="pad hidden" id="pad">
+    <button class="u" data-d="up" aria-label="Up">▲</button><button class="l" data-d="left" aria-label="Left">◀</button><button class="d" data-d="down" aria-label="Down">▼</button><button class="r" data-d="right" aria-label="Right">▶</button>
+  </div>
+  <p class="help">Arrow keys / WASD, swipe, or the on-screen pad. R restarts. Collect every spark, then reach the exit.</p>
+</main>
+<script src="js/logic.js"></script>
+<script src="js/missions.js"></script>
 <script>
-(()=>{'use strict';
-const levels=[
- {title:'Wake the Monitor',story:'1999. Alex drew Pip; June taught Pip to move. The old computer flickers awake.',intro:'Dot: Find the memories in order and bring them to the door.',mem:[[3,2],[7,2],[9,6]],door:[10,7],walls:[[5,0],[5,1],[5,2],[5,4],[5,5],[5,6],[8,4],[9,4]]},
- {title:'The Hallway Disk',story:'A hallway appears between the files. June’s handwriting marks a path through the clutter.',intro:'Dot: We can carry the good parts forward, one memory at a time.',mem:[[3,6],[8,6],[8,1]],door:[10,1],walls:[[4,1],[4,2],[4,3],[4,4],[7,3],[8,3],[9,3],[10,3]]},
- {title:'Glow-in-the-Dark Stars',story:'Alex’s paper stars glow above the desk. Each holds a little piece of a summer night.',intro:'Dot: Follow the stars in order. Even a small light can show the way.',mem:[[2,7],[6,2],[10,6]],door:[10,1],walls:[[3,0],[3,1],[3,2],[3,4],[3,5],[3,6],[7,2],[7,3],[7,4],[7,5],[7,7],[7,8]]},
- {title:'The Dust Guardian',story:'A forgotten cleaning program guards the archive, mistaking every visitor for dust.',intro:'Dot: The guardian left these blocks behind. Let’s find a way around them.',mem:[[2,5],[7,7],[9,2]],door:[11,4],walls:[[2,2],[3,2],[4,2],[5,2],[5,3],[5,4],[5,5],[8,4],[9,4],[10,4],[8,6],[9,6],[10,6]]},
- {title:'Seat Beside Mine',story:'In the computer lab, June saved a seat beside Alex. Their shared keyboard still remembers.',intro:'Dot: Some paths are easier to find when someone leaves you a sign.',mem:[[4,1],[1,7],[9,5]],door:[11,1],walls:[[2,3],[3,3],[4,3],[5,3],[6,3],[8,0],[8,1],[8,2],[8,3],[8,4],[5,5],[5,6],[5,7]]},
- {title:'The Last Save',story:'The computer hums softly. One final door waits beyond a tangle of old files.',intro:'Dot: These memories are not a cage. Let’s give them a new home.',mem:[[2,6],[6,4],[9,1]],door:[10,7],walls:[[3,1],[3,2],[3,3],[3,4],[6,0],[6,1],[6,2],[8,5],[9,5],[10,5]]}
-];
-const canvas=document.getElementById('board'),ctx=canvas.getContext('2d'),$=id=>document.getElementById(id),key='after-school-99-milestone-v3',size=48;
-let progress={level:0,done:false},pos=[1,1],collected=0,trail=[],playing=false;
-try{let saved=JSON.parse(localStorage.getItem(key));if(!saved){saved=JSON.parse(localStorage.getItem('after-school-99-milestone-v2'));if(saved&&saved.level===2)saved.level=5}if(saved&&Number.isInteger(saved.level)&&saved.level>=0&&saved.level<levels.length){progress={level:saved.level,done:saved.done===true};const l=levels[progress.level],valid=p=>Array.isArray(p)&&p.length===2&&p.every(Number.isInteger)&&p[0]>=0&&p[0]<12&&p[1]>=0&&p[1]<9&&!l.walls.some(w=>same(w,p));if(!progress.done&&valid(saved.pos)&&Number.isInteger(saved.collected)&&saved.collected>=0&&saved.collected<=l.mem.length&&Array.isArray(saved.trail)&&saved.trail.length<=saved.collected&&saved.trail.every(valid)){pos=saved.pos;collected=saved.collected;trail=saved.trail}}}catch(e){}
-function save(){try{localStorage.setItem(key,JSON.stringify({...progress,pos,collected,trail}));}catch(e){$('message').textContent='This browser could not save progress; keep this tab open.';}}
-function same(a,b){return a[0]===b[0]&&a[1]===b[1]}
-function draw(){const l=levels[progress.level];for(let y=0;y<9;y++)for(let x=0;x<12;x++){ctx.fillStyle=(x+y)%2?'#173349':'#1a3b4d';ctx.fillRect(x*size,y*size,size-1,size-1)}ctx.fillStyle='#866d61';l.walls.forEach(([x,y])=>ctx.fillRect(x*size+4,y*size+4,40,40));ctx.fillStyle=collected===3?'#ffda88':'#718189';ctx.fillRect(l.door[0]*size+10,l.door[1]*size+5,28,38);l.mem.forEach((p,i)=>{if(i<collected)return;ctx.fillStyle=i===collected?'#ffda88':'#819198';ctx.beginPath();ctx.arc(p[0]*size+24,p[1]*size+24,15,0,Math.PI*2);ctx.fill();ctx.fillStyle='#172d3a';ctx.font='bold 18px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(String(i+1),p[0]*size+24,p[1]*size+24)});trail.forEach(([x,y],i)=>{ctx.fillStyle=i%2?'#55bcae':'#68d4bf';ctx.beginPath();ctx.arc(x*size+24,y*size+24,14,0,Math.PI*2);ctx.fill()});ctx.fillStyle='#83e6cf';ctx.beginPath();ctx.arc(pos[0]*size+24,pos[1]*size+24,18,0,Math.PI*2);ctx.fill();ctx.fillStyle='#173349';ctx.fillRect(pos[0]*size+16,pos[1]*size+19,4,4);ctx.fillRect(pos[0]*size+28,pos[1]*size+19,4,4)}
-function update(){const l=levels[progress.level];$('stage').textContent=`MISSION ${String(progress.level+1).padStart(2,'0')} / ${levels.length}`;$('title').textContent=l.title;$('story').textContent=l.story;$('objective').textContent=progress.done?'Milestone complete':collected===3?'Reach the door':`Find memory ${collected+1} of 3`;$('start').textContent=progress.done?'Play again':playing?'Mission started':'Start mission';$('start').disabled=playing;draw()}
-function reset(){pos=[1,1];collected=0;trail=[];playing=false;update()}
-function move(dx,dy){if(!playing){$('message').textContent=progress.done?'Your memories are safe. Choose Play again to revisit them.':'Press Start mission first.';return}const l=levels[progress.level],next=[pos[0]+dx,pos[1]+dy];if(next[0]<0||next[0]>=12||next[1]<0||next[1]>=9||l.walls.some(w=>same(w,next))){$('message').textContent='Dot: That way is blocked. Try another route.';return}trail.unshift(pos);trail=trail.slice(0,collected);pos=next;if(collected<3&&same(pos,l.mem[collected])){collected++;trail.push(trail.length?trail[trail.length-1]:pos);$('message').textContent=collected===3?'Dot: The door is open!':`Dot: Memory ${collected} recovered.`}else if(l.mem.some((m,i)=>i>collected&&same(m,pos))){$('message').textContent='Dot: Find the earlier memory first.'}if(same(pos,l.door)){if(collected<3){$('message').textContent='Dot: The door needs all three memories.'}else if(progress.level<levels.length-1){progress.level++;reset();save();$('message').textContent='Dot: A piece of the old world is safe. Ready for the next mission?';return}else{progress.done=true;playing=false;save();$('message').textContent='Dot: We saved it twice: once on the disk, and once in each other. Thank you for bringing us home.'}}save();update()}
-$('start').addEventListener('click',()=>{if(progress.done){progress={level:0,done:false};reset();save()}playing=true;$('message').textContent=levels[progress.level].intro;update()});$('restart').addEventListener('click',()=>{reset();save();$('message').textContent='Dot: Back at the start of this mission.'});const dirs={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};document.querySelectorAll('[data-dir]').forEach(b=>b.addEventListener('click',()=>move(...dirs[b.dataset.dir])));document.addEventListener('keydown',e=>{const keys={ArrowUp:'up',w:'up',ArrowDown:'down',s:'down',ArrowLeft:'left',a:'left',ArrowRight:'right',d:'right'},dir=keys[e.key];if(dir&&!e.repeat){e.preventDefault();move(...dirs[dir])}});update();$('message').textContent=progress.done?'Dot: You brought the memories home.':'Dot: Press Start mission when you are ready.';if('serviceWorker'in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js').catch(()=>{});
+(function(){
+'use strict';
+const M=Missions.missions,END=Missions.ending,SAVE='after-school-99-last-save-v1',CELL=40;
+const $=id=>document.getElementById(id);
+const cv=$('cv'),ctx=cv.getContext('2d'),card=$('card');
+let save={mission:0,finished:false},idx=0,L,S,dir='right',running=false,mode='step',sound=true,over=true,last=0,acc=0,audio=null;
+try{const s=JSON.parse(localStorage.getItem(SAVE));if(s&&Number.isInteger(s.mission)&&s.mission>=0&&s.mission<M.length)save={mission:s.mission,finished:s.finished===true};
+ const o=JSON.parse(localStorage.getItem(SAVE+'-opts'));if(o){mode=o.mode==='classic'?'classic':'step';sound=o.sound!==false}}catch(e){}
+function store(){try{localStorage.setItem(SAVE,JSON.stringify(save));localStorage.setItem(SAVE+'-opts',JSON.stringify({mode,sound}))}catch(e){toast('This browser could not save progress; keep this tab open.')}}
+function toast(t){$('toast').textContent=t}
+function beep(f,d,type){if(!sound)return;try{audio=audio||new (window.AudioContext||window.webkitAudioContext)();const o=audio.createOscillator(),g=audio.createGain();o.type=type||'square';o.frequency.value=f;g.gain.value=.05;o.connect(g);g.connect(audio.destination);o.start();g.gain.exponentialRampToValueAtTime(.0001,audio.currentTime+d);o.stop(audio.currentTime+d)}catch(e){}}
+const SFX={frag:()=>beep(660,.1),last:()=>{beep(660,.1);setTimeout(()=>beep(880,.15),90)},key:()=>beep(990,.15),portal:()=>beep(440,.12,'triangle'),win:()=>{beep(523,.12);setTimeout(()=>beep(659,.12),110);setTimeout(()=>beep(784,.25),220)},die:()=>beep(110,.3,'sawtooth')};
+
+function showCard(title,text,buttons,tag){
+  over=true;running=false;card.classList.remove('hidden');card.innerHTML='';
+  const h=document.createElement('h2');h.textContent=title;card.appendChild(h);
+  (Array.isArray(text)?text:[text]).forEach(t=>{const p=document.createElement('p');p.textContent=t;card.appendChild(p)});
+  if(tag){const p=document.createElement('p');p.className='tag';p.textContent=tag;card.appendChild(p)}
+  const row=document.createElement('div');row.className='row';
+  buttons.forEach((b,i)=>{const e=document.createElement('button');e.textContent=b[0];if(b[2])e.className='ghost';e.onclick=b[1];row.appendChild(e);if(i===0)setTimeout(()=>e.focus(),0)});
+  card.appendChild(row);
+}
+function hideCard(){card.classList.add('hidden');over=false}
+function title(){
+  $('game').classList.add('hidden');$('pad').classList.add('hidden');
+  const b=[['New game',()=>{save={mission:0,finished:save.finished};store();startMission(0)}]];
+  if(save.mission>0)b.unshift(['Continue: mission '+(save.mission+1),()=>startMission(save.mission)]);
+  showCard('The Last Save',['Deep inside the old family computer, a tiny glowing ribbon named Pip wakes up.','Collect memories, grow longer, and find your way out of each one.'],b,'“Some things are worth saving twice.”'+(save.finished?'  ★ Completed':''));
+}
+function startMission(i){
+  idx=i;L=Logic.parse(M[i]);S=Logic.newGame(L);dir='right';
+  cv.width=L.w*CELL;cv.height=L.h*CELL;
+  $('game').classList.remove('hidden');$('pad').classList.remove('hidden');
+  save.mission=Math.max(0,i);store();hud();toast('');
+  showCard('Mission '+(i+1)+': '+M[i].title,M[i].intro,[['Play',()=>{hideCard();toast(mode==='step'?'Step mode: Pip moves when you do.':'Classic mode: Pip keeps moving.')}]]);
+}
+function restart(){if(!L)return;S=Logic.newGame(L);dir='right';running=false;hud();hideCard();toast('')}
+function hud(){$('hMission').textContent='Mission '+(idx+1)+'/'+M.length;$('hMem').textContent='Memories '+S.got+'/'+S.total;
+ $('bMode').textContent='Mode: '+(mode==='step'?'Step':'Classic');$('bSound').textContent='Sound: '+(sound?'On':'Off')}
+const WHY={wall:'Pip bumped into a wall.',self:'Pip tangled up in itself.',dust:'A dust bunny got Pip!',door:'The door is locked. Find the key first.',gate:'The exit stays shut until every memory is collected.'};
+function move(d){
+  if(over||!S)return;
+  if(mode==='classic'){const o={up:'down',down:'up',left:'right',right:'left'};if(S.body.length>1&&o[d]===dir)return;dir=d;running=true;return}
+  dir=d;tick();
+}
+function tick(){
+  const n=Logic.step(S,dir);if(n===S)return;S=n;
+  n.events.forEach(e=>{if(SFX[e])SFX[e]()});hud();
+  if(S.status==='dead'){running=false;toast(WHY[S.cause]||'Oops!');
+    setTimeout(()=>showCard('Oops!',WHY[S.cause]||'Try again.',[['Try again',restart]]),350)}
+  else if(S.status==='won'){running=false;save.mission=idx+1<M.length?idx+1:0;if(idx+1>=M.length)save.finished=true;store();
+    setTimeout(()=>{
+      if(idx+1<M.length)showCard('Memory saved!',M[idx].outro,[['Next mission',()=>startMission(idx+1)],['Menu',title,1]]);
+      else showCard('The End',M[idx].outro.split('\n').concat(END),[['Play again',()=>{save.mission=0;store();startMission(0)}],['Menu',title,1]],'“Some things are worth saving twice.”');
+    },450)}
+}
+const KEYS={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',s:'down',a:'left',d:'right',W:'up',S:'down',A:'left',D:'right'};
+addEventListener('keydown',e=>{
+  if(e.metaKey||e.ctrlKey||e.altKey)return;
+  if(KEYS[e.key]){if(!over){e.preventDefault();move(KEYS[e.key])}}
+  else if((e.key==='r'||e.key==='R')&&L&&!over)restart();
+});
+document.querySelectorAll('#pad button').forEach(b=>b.addEventListener('click',()=>move(b.dataset.d)));
+let tx=0,ty=0;
+cv.addEventListener('touchstart',e=>{const t=e.changedTouches[0];tx=t.clientX;ty=t.clientY},{passive:true});
+cv.addEventListener('touchend',e=>{const t=e.changedTouches[0],dx=t.clientX-tx,dy=t.clientY-ty;if(Math.max(Math.abs(dx),Math.abs(dy))<24)return;
+  move(Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up'))},{passive:true});
+$('bRestart').onclick=restart;
+$('bMenu').onclick=title;
+$('bMode').onclick=()=>{mode=mode==='step'?'classic':'step';running=false;store();hud();toast(mode==='step'?'Step mode: Pip moves when you do.':'Classic mode: Pip keeps moving. Choose a direction to start.')};
+$('bSound').onclick=()=>{sound=!sound;store();hud();SFX.frag()};
+
+function draw(t){
+  const w=cv.width,h=cv.height;ctx.fillStyle='#0a0f20';ctx.fillRect(0,0,w,h);
+  if(!L){ctx.fillStyle='#16204a';for(let y=0;y<9;y++)for(let x=0;x<11;x++)if((x+y)%2)ctx.fillRect(x*CELL,y*CELL,CELL,CELL);return}
+  const pulse=1+Math.sin(t/220)*.12;
+  for(let y=0;y<L.h;y++)for(let x=0;x<L.w;x++){
+    const c=L.grid[y][x],px=x*CELL,py=y*CELL;
+    if(c==='#'){ctx.fillStyle='#34408a';ctx.fillRect(px,py,CELL,CELL);ctx.fillStyle='#4a5ab8';ctx.fillRect(px+2,py+2,CELL-4,6);ctx.fillStyle='#232c63';ctx.fillRect(px,py+CELL-6,CELL,6);continue}
+    ctx.fillStyle=(x+y)%2?'#10183a':'#0d1431';ctx.fillRect(px,py,CELL,CELL);
+    if(c==='D'){ctx.fillStyle=S.hasKey?'rgba(255,216,74,.25)':'#b5651d';ctx.fillRect(px+6,py+4,CELL-12,CELL-8);if(!S.hasKey){ctx.fillStyle='#ffd84a';ctx.fillRect(px+CELL/2-3,py+CELL/2-3,6,6)}}
+    else if(c==='K'&&!S.hasKey){ctx.fillStyle='#ffd84a';ctx.beginPath();ctx.arc(px+14,py+CELL/2,8*pulse,0,7);ctx.fill();ctx.fillRect(px+18,py+CELL/2-3,16,6);ctx.fillRect(px+28,py+CELL/2,4,10)}
+    else if(c==='E'){const open=S.got>=S.total;ctx.fillStyle=open?'#7dffb0':'#4a2a3a';ctx.fillRect(px+4,py+4,CELL-8,CELL-8);ctx.fillStyle=open?'#0a0f20':'#7a4a5a';ctx.font='bold 18px monospace';ctx.textAlign='center';ctx.fillText('EXIT',px+CELL/2,py+CELL/2+6);ctx.textAlign='start'}
+    else if(c==='1'||c==='2'){ctx.strokeStyle=c==='1'?'#ff9bf0':'#7ad8ff';ctx.lineWidth=4;ctx.beginPath();ctx.arc(px+CELL/2,py+CELL/2,13*pulse,0,7);ctx.stroke();ctx.beginPath();ctx.arc(px+CELL/2,py+CELL/2,6,0,7);ctx.stroke()}
+  }
+  L.frags.forEach((f,i)=>{if(S.mask&(1<<i))return;const cx=f[0]*CELL+CELL/2,cy=f[1]*CELL+CELL/2;ctx.fillStyle='#fff7b0';ctx.beginPath();ctx.moveTo(cx,cy-12*pulse);ctx.lineTo(cx+9*pulse,cy);ctx.lineTo(cx,cy+12*pulse);ctx.lineTo(cx-9*pulse,cy);ctx.closePath();ctx.fill()});
+  S.bugs.forEach(b=>{const cx=b.x*CELL+CELL/2,cy=b.y*CELL+CELL/2;ctx.fillStyle='#c9b8a0';ctx.beginPath();ctx.arc(cx,cy,14,0,7);ctx.fill();ctx.fillStyle='#8a7a66';ctx.beginPath();ctx.arc(cx-6,cy-10,5,0,7);ctx.arc(cx+6,cy-10,5,0,7);ctx.fill();ctx.fillStyle='#000';ctx.fillRect(cx-6,cy-3,3,5);ctx.fillRect(cx+3,cy-3,3,5)});
+  for(let i=S.body.length-1;i>=0;i--){const p=S.body[i],px=p[0]*CELL,py=p[1]*CELL,k=i/Math.max(1,S.body.length);
+    ctx.fillStyle=i===0?'#9dffd6':'hsl(155,100%,'+(62-k*28)+'%)';ctx.fillRect(px+4,py+4,CELL-8,CELL-8);
+    if(i===0){ctx.fillStyle='#0a0f20';const e=dir==='left'?[-5,-5]:dir==='right'?[5,-5]:dir==='up'?[0,-8]:[0,4];ctx.fillRect(px+CELL/2-8+e[0]*.4,py+CELL/2-6+e[1]*.4,5,6);ctx.fillRect(px+CELL/2+3+e[0]*.4,py+CELL/2-6+e[1]*.4,5,6)}}
+  if(S.status==='dead'){ctx.fillStyle='rgba(255,107,129,.25)';ctx.fillRect(0,0,w,h)}
+}
+function frame(t){
+  if(running&&!over&&mode==='classic'){acc+=t-last;while(acc>=230&&running&&!over){acc-=230;tick()}}else acc=0;
+  last=t;draw(t);requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+title();
+if('serviceWorker' in navigator&&location.protocol.startsWith('http'))addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+window.__game={state:()=>S,move,startMission};
 })();
-</script></body></html>
+</script>
+</body></html>
