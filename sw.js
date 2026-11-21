@@ -1,5 +1,5 @@
-const CACHE = 'after-school-99-milestone-v5';
-const FILES = ['./', './index.html', './manifest.webmanifest', './icon.svg'];
+const CACHE = 'after-school-99-snake-v6';
+const FILES = ['./', './index.html', './manifest.webmanifest', './icon.svg', './js/logic.js', './js/missions.js'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES)));
 });
