@@ -1,7 +1,6 @@
 name: Mission tests
 on:
   push:
-  pull_request:
   workflow_dispatch:
 jobs:
   test:
@@ -12,4 +11,4 @@ jobs:
         with:
           node-version: 22
       - name: Check mission layouts
-        run: node --test mission-layouts.test.cjs tests/mission-layouts.test.cjs
+        run: node --test tests/missions.test.cjs
