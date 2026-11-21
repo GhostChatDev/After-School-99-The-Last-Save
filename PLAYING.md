@@ -1,6 +1,6 @@
 # After School ’99: The Last Save — playable milestone
 
-This milestone contains three short grid puzzles and a small ending. It is not the complete planned 24-mission campaign: abilities, the rest of the story, audio, accessibility settings, and the intended four-hour experience are not included.
+This milestone contains six short grid puzzles and a small ending. It is not the complete planned 24-mission campaign: abilities, hazards, the rest of the story, audio, accessibility settings, and the intended four-hour experience are not included. The Dust Guardian is currently a static obstacle puzzle, not the planned boss encounter. Old saves from the three-mission milestone are preserved, including the original final mission.
 
 ## Run
 

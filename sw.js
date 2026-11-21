@@ -1,4 +1,4 @@
-const CACHE = 'after-school-99-milestone-v4';
+const CACHE = 'after-school-99-milestone-v5';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon.svg'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES)));
