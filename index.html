@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#11172c">
+  <meta name="description" content="A nostalgic adventure about the things we carry forward.">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./style.css">
+  <title>After School ’99: The Last Save</title>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar"><div class="brand"><span class="brand-icon" aria-hidden="true">✳</span><span>AFTER SCHOOL <b>’99</b></span></div><span class="top-note">A LITTLE GAME ABOUT HOLDING ON</span></header>
+    <main>
+      <section class="intro"><div><p class="eyebrow"><span class="live-dot"></span> AN ORIGINAL ADVENTURE · CHAPTER 01</p><h1>The room that<br><em>remembered.</em></h1><p class="subtitle">Some things are worth saving twice.</p></div><div class="disk" aria-hidden="true"><span>AS<br>99</span></div></section>
+      <div class="layout">
+        <section class="game-card" aria-label="Game">
+          <div class="card-header"><div><p class="eyebrow">MISSION 01 / BEDROOM BOOT</p><h2>Wake the Monitor</h2></div><span class="badge">● FIRST SAVE</span></div>
+          <div class="hud"><div><span>MEMORY PACKETS</span><strong id="packet-count">0 / 3</strong></div><div><span>STATUS</span><strong id="status">READY TO BOOT</strong></div><div><span>CHECKPOINT</span><strong>BEDROOM</strong></div></div>
+          <div class="screen-wrap"><canvas id="board" width="720" height="480" aria-label="Game board. Collect packets 1, 2 and 3 in order, then reach the exit."></canvas><div class="scanlines" aria-hidden="true"></div></div>
+          <div class="game-footer"><span><span class="live-dot"></span> <span id="hint">Press Start to wake Pip.</span></span><span class="keyboard-hint">ARROWS / WASD TO MOVE</span></div>
+          <div class="actions"><button id="start" class="primary">Start adventure <span aria-hidden="true">↗</span></button><button id="pause">Pause</button><button id="restart">Restart mission</button></div>
+          <div class="touch-area"><div><p class="eyebrow">DIRECTION PAD</p><p class="touch-copy">Tap to steer Pip.</p></div><div class="dpad" aria-label="Touch direction controls"><button data-direction="up" aria-label="Move up">▲</button><button data-direction="left" aria-label="Move left">◀</button><button data-direction="down" aria-label="Move down">▼</button><button data-direction="right" aria-label="Move right">▶</button></div></div>
+        </section>
+        <aside class="sidebar"><div class="side-card story"><p class="eyebrow">✦ A MESSAGE FROM DOT</p><div class="dot-face" aria-hidden="true">✳</div><p class="quote">“Oh! You’re awake. I thought we’d lost you in the loading screen.”</p><p class="side-copy">The old computer is fading. Help Pip collect its memories and find the way out.</p></div><div class="side-card how"><p class="eyebrow">HOW TO PLAY</p><ol><li><span>01</span><div><b>Find the memories</b><small>Collect packets 1, 2, then 3.</small></div></li><li><span>02</span><div><b>Watch your tail</b><small>Pip grows with every packet. Avoid walls and yourself.</small></div></li><li><span>03</span><div><b>Find the door</b><small>Once all packets are collected, reach the glowing exit.</small></div></li></ol></div><div class="side-bottom"><span>✳</span><p>MADE OF LITTLE MOMENTS<br><b>AND ONE MORE TRY.</b></p></div></aside>
+      </div>
+      <footer><span>AFTER SCHOOL ’99 <span class="muted"> / THE LAST SAVE</span></span><span>Progress is saved on this device. Clearing site data removes it.</span></footer>
+    </main>
+  </div>
+  <script type="module" src="./game.js"></script>
+</body>
+</html>
