@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#121a2a">
+<meta name="description" content="A small playable opening to After School '99: The Last Save.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<title>After School ’99: The Last Save</title>
+<style>
+:root{color-scheme:dark;--bg:#101827;--panel:#1d293a;--line:#43546a;--text:#fff4dc;--muted:#b9c9cf;--gold:#ffd27a;--cyan:#8de5d0}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 50% 0,#344358,var(--bg) 60%);color:var(--text);font:16px/1.5 system-ui,sans-serif;padding:env(safe-area-inset-top) max(16px,env(safe-area-inset-right)) max(20px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}main{max-width:920px;margin:auto}header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 0}header p{margin:0;color:var(--gold);font-size:.72rem;letter-spacing:.14em;font-weight:800}h1{font-size:clamp(1.3rem,4vw,2rem);line-height:1.15;margin:4px 0}h2{margin:0 0 8px;font-size:1.2rem}button{font:inherit;font-weight:700;color:var(--text);background:#34485b;border:1px solid #60798b;border-radius:10px;padding:10px 16px;min-height:44px;cursor:pointer}button:hover{background:#456079}button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}button:disabled{opacity:.5;cursor:default}.primary{background:var(--gold);border-color:var(--gold);color:#172332}.primary:hover{background:#ffe3a6}.layout{display:grid;grid-template-columns:minmax(0,1fr) 240px;gap:16px}.panel{background:rgba(29,41,58,.94);border:1px solid var(--line);border-radius:14px;padding:16px}.screen{padding:12px}.monitor{background:#0c1724;border:4px solid #536071;border-radius:9px;overflow:hidden;box-shadow:inset 0 0 30px #0008}canvas{display:block;width:100%;height:auto;image-rendering:pixelated;touch-action:none}.status{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:.9rem;margin:10px 2px 0}.status strong{color:var(--gold)}.story{color:var(--muted);font-size:.93rem}.story strong{color:var(--text)}.controls{display:grid;grid-template-columns:repeat(3,52px);gap:6px;justify-content:center;margin:16px 0 4px}.controls button{width:52px;height:48px;padding:0;touch-action:manipulation}.controls .up{grid-column:2}.controls .left{grid-column:1}.controls .down{grid-column:2}.controls .right{grid-column:3}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.note{font-size:.8rem;color:var(--muted)}.message{color:var(--cyan);min-height:3em}.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}@media(max-width:700px){header{padding:12px 0}.layout{grid-template-columns:1fr}.panel{padding:12px}.sidebar{display:grid;grid-template-columns:1fr auto;gap:12px}.controls{margin:0}.story{margin:4px 0}.actions{margin-top:8px}}@media(max-width:430px){.sidebar{display:block}.controls{margin:12px auto}.status{font-size:.8rem}}
+</style>
+</head>
+<body>
+<main>
+<header><div><p>AN ORIGINAL LITTLE ADVENTURE</p><h1>After School ’99: The Last Save</h1><span class="note">Some things are worth saving twice.</span></div></header>
+<div class="layout">
+<section class="panel screen" aria-label="Game screen">
+<div class="monitor"><canvas id="game" width="672" height="480" aria-label="Game board showing Pip, memory packets, walls and an exit"></canvas></div>
+<div class="status"><span id="mission-label">MISSION 01 <strong>Wake the Monitor</strong></span><span id="objective">Collect packet 1 of 3</span></div>
+</section>
+<aside class="panel sidebar">
+<div><h2>Bedroom Boot</h2><p class="story"><strong>1999.</strong> Alex drew Pip. June taught Pip how to move. Years later, their old computer flickers awake.</p><p class="message" id="message" aria-live="polite">Dot: The monitor needs three memory packets. Let’s find them in order.</p><div class="actions"><button class="primary" id="start">Start mission</button><button id="pause" disabled>Pause</button><button id="restart">Restart</button></div><p class="note">Arrow keys or WASD to turn. Touch the arrows below. Space pauses. A collision restarts the mission; there are no lives to lose.</p></div>
+<div><div class="controls" aria-label="Movement controls"><button class="up" data-direction="up" aria-label="Turn up">▲</button><button class="left" data-direction="left" aria-label="Turn left">◀</button><button class="down" data-direction="down" aria-label="Turn down">▼</button><button class="right" data-direction="right" aria-label="Turn right">▶</button></div></div>
+</aside>
+</div>
+<p class="note">A short three-mission adventure. Mission progress is saved on this device.</p>
+</main>
+<script>
+'use strict';
+(() => {
+  const canvas = document.getElementById('game'), ctx = canvas.getContext('2d');
+  const objective = document.getElementById('objective'), message = document.getElementById('message');
+  const startButton = document.getElementById('start'), pauseButton = document.getElementById('pause');
+  const width = 14, height = 10, cell = 48, interval = 180;
+  const directions = {up:{x:0,y:-1},down:{x:0,y:1},left:{x:-1,y:0},right:{x:1,y:0}};
+  const packets = [{x:5,y:2},{x:10,y:3},{x:8,y:7}];
+  const walls = [[3,4],[4,4],[5,4],[8,5],[9,5],[10,5],[3,7],[4,7]];
+  const exit = {x:12,y:8};
+  const storageKey = 'after-school-99-opening-complete';
+  let completed = false;
+  try { completed = localStorage.getItem(storageKey) === 'yes'; } catch (_) {}
+  let snake, direction, queue, nextPacket, state = 'ready', accumulator = 0, lastTime = 0;
+  const same = (a,b) => a.x === b.x && a.y === b.y;
+  function reset() {
+    snake = [{x:2,y:2},{x:1,y:2}]; direction = directions.right; queue = []; nextPacket = 0; accumulator = 0;
+    objective.textContent = 'Collect packet 1 of 3';
+  }
+  function say(text) { message.textContent = text; }
+  function syncButtons() {
+    startButton.textContent = state === 'won' ? 'Play again' : state === 'ready' ? 'Start mission' : 'Mission running';
+    startButton.disabled = state === 'running' || state === 'paused';
+    pauseButton.disabled = state !== 'running' && state !== 'paused';
+    pauseButton.textContent = state === 'paused' ? 'Resume' : 'Pause';
+  }
+  function begin() { reset(); state = 'running'; say('Dot: Collect the glowing packets in order, then reach the door.'); syncButtons(); }
+  function togglePause() { if (state === 'running') {state = 'paused'; say('Paused. Take your time.');} else if (state === 'paused') {state = 'running'; say('Dot: You can do this, Pip.');} accumulator = 0; syncButtons(); }
+  function turn(name) {
+    if (state !== 'running') return;
+    const next = directions[name], prior = queue.length ? queue[queue.length - 1] : direction;
+    if (!next || (next.x === -prior.x && next.y === -prior.y) || same(next,prior) || queue.length >= 2) return;
+    queue.push(next);
+  }
+  function fail() { reset(); say('Dot: That’s okay. The bedroom checkpoint is ready. Try another route.'); }
+  function tick() {
+    if (queue.length) direction = queue.shift();
+    const head = {x:snake[0].x + direction.x, y:snake[0].y + direction.y};
+    const grows = nextPacket < packets.length && same(head,packets[nextPacket]);
+    const hitsBody = snake.slice(0, grows ? snake.length : -1).some(part => same(part,head));
+    if (head.x < 0 || head.x >= width || head.y < 0 || head.y >= height || walls.some(([x,y]) => x === head.x && y === head.y) || hitsBody) { fail(); return; }
+    snake.unshift(head);
+    if (!grows) snake.pop();
+    else {
+      nextPacket++;
+      if (nextPacket === packets.length) { objective.textContent = 'Reach the glowing exit'; say('Dot: The monitor is awake! The exit is open.'); }
+      else { objective.textContent = `Collect packet ${nextPacket + 1} of 3`; say(`Dot: Packet ${nextPacket} recovered. Look for ${nextPacket + 1}.`); }
+    }
+    if (nextPacket === packets.length && same(head,exit)) {
+      state = 'won'; completed = true; try {localStorage.setItem(storageKey,'yes');} catch (_) {}
+      objective.textContent = 'Mission complete'; say('Dot: We saved the first piece. June’s note reads: “Leave the door where you can find it.”'); syncButtons();
+    }
+  }
+  function draw() {
+    ctx.fillStyle = '#102337'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    for (let y=0;y<height;y++) for (let x=0;x<width;x++) {ctx.fillStyle = (x+y)%2 ? '#142a3c' : '#172f40'; ctx.fillRect(x*cell+1,y*cell+1,cell-2,cell-2);}
+    ctx.fillStyle = '#7a5f56'; walls.forEach(([x,y]) => {ctx.fillRect(x*cell+4,y*cell+4,cell-8,cell-8);ctx.fillStyle='#b58c6c';ctx.fillRect(x*cell+7,y*cell+7,cell-14,5);ctx.fillStyle='#7a5f56';});
+    ctx.fillStyle = nextPacket === packets.length ? '#ffd27a' : '#4b606b'; ctx.fillRect(exit.x*cell+8,exit.y*cell+5,32,38);ctx.fillStyle='#152a37';ctx.fillRect(exit.x*cell+13,exit.y*cell+10,22,28);
+    packets.forEach((p,i) => {if(i<nextPacket)return;ctx.fillStyle=i===nextPacket?'#ffdb84':'#617482';ctx.beginPath();ctx.arc(p.x*cell+24,p.y*cell+24,15,0,Math.PI*2);ctx.fill();ctx.fillStyle='#192b39';ctx.font='bold 19px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(String(i+1),p.x*cell+24,p.y*cell+25);});
+    snake.slice().reverse().forEach((p,i) => {ctx.fillStyle=i===snake.length-1?'#bcfff0':'#6acdb6';ctx.beginPath();ctx.roundRect(p.x*cell+5,p.y*cell+5,38,38,10);ctx.fill();});
+    const head=snake[0];ctx.fillStyle='#14364a';ctx.beginPath();ctx.arc(head.x*cell+19+direction.x*4,head.y*cell+19+direction.y*4,3,0,Math.PI*2);ctx.arc(head.x*cell+29+direction.x*4,head.y*cell+19+direction.y*4,3,0,Math.PI*2);ctx.fill();
+    if(state==='ready'||state==='paused'||state==='won') {ctx.fillStyle='#08131dcc';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#fff4dc';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='bold 30px system-ui';ctx.fillText(state==='ready'?'WAKE THE MONITOR':state==='paused'?'PAUSED':'FIRST SAVE RECOVERED',canvas.width/2,canvas.height/2-12);ctx.fillStyle='#b9c9cf';ctx.font='18px system-ui';ctx.fillText(state==='ready'?(completed?'Mission previously completed':'Press Start mission to begin'):state==='paused'?'Press Resume to continue':'Thank you for playing the opening',canvas.width/2,canvas.height/2+28);}
+  }
+  function frame(time) {if (!lastTime) lastTime=time;const delta=Math.min(time-lastTime,250);lastTime=time;if(state==='running'){accumulator+=delta;while(accumulator>=interval && state==='running'){tick();accumulator-=interval;}}draw();requestAnimationFrame(frame);}
+  document.querySelectorAll('[data-direction]').forEach(button => button.addEventListener('click',()=>turn(button.dataset.direction)));
+  startButton.addEventListener('click',begin);pauseButton.addEventListener('click',togglePause);
+  document.getElementById('restart').addEventListener('click',()=>{reset();state='ready';say('Dot: Back at the bedroom checkpoint. Start when you are ready.');syncButtons();});
+  document.addEventListener('keydown',event=>{const keys={ArrowUp:'up',w:'up',W:'up',ArrowDown:'down',s:'down',S:'down',ArrowLeft:'left',a:'left',A:'left',ArrowRight:'right',d:'right',D:'right'};if(keys[event.key]){event.preventDefault();if(!event.repeat)turn(keys[event.key]);}else if(event.code==='Space'){event.preventDefault();if(!event.repeat)togglePause();}});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden&&state==='running')togglePause();});
+  reset();syncButtons();requestAnimationFrame(frame);
+  if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(()=>{});
+})();
+</script>
+</body>
+</html>
