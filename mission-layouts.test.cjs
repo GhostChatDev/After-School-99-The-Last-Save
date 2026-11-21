@@ -28,7 +28,7 @@ function routeExists(start, target, walls) {
 }
 
 test('each milestone mission has valid, reachable ordered objectives', () => {
-  assert.equal(levels.length, 3);
+  assert.equal(levels.length, 6);
   for (const level of levels) {
     assert.equal(level.mem.length, 3, level.title);
     const walls = new Set(level.walls.map(p => p.join(',')));
