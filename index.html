@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#11172c">
+<link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icon.svg" type="image/svg+xml"><link rel="stylesheet" href="./style.css">
+<title>After School ’99: The Last Save</title>
+</head>
+<body>
+<header><span>✳ AFTER SCHOOL <b>’99</b></span><small>A LITTLE GAME ABOUT HOLDING ON</small></header>
+<main>
+<section class="intro"><p class="eyebrow">AN ORIGINAL ADVENTURE · CHAPTER 01</p><h1>The room that<br><em>remembered.</em></h1><p>Some things are worth saving twice.</p></section>
+<div class="layout"><section class="card" aria-label="Game">
+<div class="card-header"><div><p class="eyebrow">MISSION 01 / BEDROOM BOOT</p><h2>Wake the Monitor</h2></div><span class="badge">FIRST SAVE</span></div>
+<div class="hud"><div>MEMORY PACKETS<strong id="packet-count">0 / 3</strong></div><div>STATUS<strong id="status">READY TO BOOT</strong></div><div>CHECKPOINT<strong>BEDROOM</strong></div></div>
+<canvas id="board" width="720" height="480" aria-label="Game board. Collect packets 1, 2 and 3 in order, then reach the exit."></canvas>
+<p id="hint" aria-live="polite">Press Start to wake Pip.</p>
+<div class="actions"><button id="start">Start adventure</button><button id="pause">Pause</button><button id="restart">Restart mission</button></div>
+<div class="touch"><div><p class="eyebrow">DIRECTION PAD</p><p>Tap to steer Pip.</p></div><div class="dpad" aria-label="Touch direction controls"><button data-direction="up" aria-label="Move up">▲</button><button data-direction="left" aria-label="Move left">◀</button><button data-direction="down" aria-label="Move down">▼</button><button data-direction="right" aria-label="Move right">▶</button></div></div>
+</section><aside><section class="card"><p class="eyebrow">✦ A MESSAGE FROM DOT</p><div class="dot">✳</div><blockquote>“Oh! You’re awake. I thought we’d lost you in the loading screen.”</blockquote><p>The old computer is fading. Help Pip collect its memories and find the way out.</p></section><section class="card"><p class="eyebrow">HOW TO PLAY</p><ol><li>Collect packets 1, 2, then 3.</li><li>Watch your tail. Avoid walls and yourself.</li><li>Once all packets are collected, reach the glowing exit.</li></ol><p>Use arrow keys, WASD or the direction pad. Each press moves one square.</p></section></aside></div>
+<footer>Progress is saved on this device. Clearing site data removes it.</footer>
+</main><script type="module" src="./game.js"></script>
+</body></html>
