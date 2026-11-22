@@ -1,4 +1,4 @@
-/* Story and mission maps. Legend: # wall, . floor, P start, o memory, K key, D door, E exit, 1 2 portals, h v dust bunnies. */
+/* Story and mission maps. Legend: # wall, . floor, P start, o memory, K key, D door, E exit, 1 2 portals, h v dust bunnies, A-C terminals, G guardian row. */
 (function (root) {
   'use strict';
   const missions = [
