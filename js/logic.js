@@ -39,7 +39,7 @@
   function newGame(L) {
     return { L: L, body: [L.start.slice()], mask: 0, got: 0, total: L.frags.length, hasKey: false, terminalCount: 0,
       bugs: L.bugs.map(function (b) { return { x: b.x, y: b.y, dx: b.dx, dy: b.dy, px: b.x, py: b.y }; }),
-      status: 'play', cause: '', events: [], moves: 0 };
+      status: 'play', cause: '', events: [], moves: 0, brake: 1, braking: false };
   }
 
   function blockedForBug(L, x, y) { const c = cell(L, x, y); return c === '#' || c === 'D' || c === 'E'; }
@@ -52,6 +52,7 @@
     if (s.body.length > 1 && s.body[1][0] === nx && s.body[1][1] === ny) return s;
     const n = Object.assign({}, s, { events: [], moves: s.moves + 1 });
     n.brake = s.braking ? Math.max(0, s.brake - BRAKE.drain) : Math.min(1, s.brake + BRAKE.fill);
+    if (n.brake <= 0) n.braking = false; // a spent meter releases the brake by itself
     const die = function (cause) { n.status = 'dead'; n.cause = cause; n.events.push('die'); return n; };
     const c = cell(L, nx, ny);
     if (c === '#') return die('wall');

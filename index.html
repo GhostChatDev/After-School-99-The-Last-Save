@@ -97,8 +97,16 @@ function startMission(i){
 }
 function restart(){if(!L)return;S=Logic.newGame(L);dir='right';running=false;hud();hideCard();toast('')}
 function hud(){$('hMission').textContent='Mission '+(idx+1)+'/'+M.length;$('hMem').textContent=S?'Memories '+S.got+'/'+S.total:'Memories —';
- $('bMode').textContent='Mode: '+(mode==='step'?'Step':'Classic');$('bSound').textContent='Sound: '+(sound?'On':'Off')}
-const WHY={wall:'Pip bumped into a wall.',self:'Pip tangled up in itself.',dust:'A dust bunny got Pip!',door:'The door is locked. Find the key first.',gate:'The exit stays shut until every memory is collected.'};
+ $('bMode').textContent='Mode: '+(mode==='step'?'Step':'Classic');$('bSound').textContent='Sound: '+(sound?'On':'Off');
+ $('hBrake').textContent=brakeLabel();$('hBrake').style.color=S&&S.brake<0.25?'var(--danger)':'';
+ $('hHazard').textContent=guardianText()}
+function brakeLabel(){return S?('BRAKE '+Math.round(S.brake*100)+'%'+(S.braking?' ●ON':'')):'BRAKE'}
+function guardianText(){ // amber for the two warning beats, red while the guardian sweeps its row
+  if(!S||!L||L.guardianRow===null)return '';
+  const ph=S.moves%4;
+  return ph<2?'Guardian: warning':(S.braking&&ph===2?'Guardian: crossing…':'Guardian: sweeping');
+}
+const WHY={wall:'Pip bumped into a wall.',self:'Pip tangled up in itself.',dust:'A dust bunny got Pip!',door:'The door is locked. Find the key first.',gate:'The exit stays shut until every memory is collected.',guardian:'The Dust Guardian swept Pip away. Cross on a warning beat.',brake:'Pip has no brake left.'};
 function move(d){
   if(over||!S)return;
   if(mode==='classic'){const o={up:'down',down:'up',left:'right',right:'left'};if(S.body.length>1&&o[d]===dir)return;dir=d;running=true;return}
@@ -118,10 +126,31 @@ function tick(){
 const KEYS={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',s:'down',a:'left',d:'right',W:'up',S:'down',A:'left',D:'right'};
 addEventListener('keydown',e=>{
   if(e.metaKey||e.ctrlKey||e.altKey)return;
+  if(e.key===' '){e.preventDefault();brakePress();return}
   if(KEYS[e.key]){if(!over){e.preventDefault();move(KEYS[e.key])}}
   else if((e.key==='r'||e.key==='R')&&L&&!over)restart();
 });
+addEventListener('keyup',e=>{if(e.key===' ')brakeRelease()});
+function brakePress(){if(!S||S.status!=='play')return;applyBrake(true)}
+function brakeRelease(){if(!S)return;applyBrake(false)}
+function applyBrake(on){
+  if(S.status!=='play'){hud();return}
+  if(!S.brake&&on)return; // an empty meter can't brake
+  const n=Logic.setBrake(S,on);
+  if(n!==S){S=n;}
+  hud();
+}
 document.querySelectorAll('#pad button').forEach(b=>b.addEventListener('click',()=>move(b.dataset.d)));
+const bb=$('bBrake');
+if(bb){
+  const on=()=>{bb.classList.add('active')},off=()=>{bb.classList.remove('active')};
+  bb.addEventListener('pointerdown',e=>{e.preventDefault();on();brakePress()});
+  bb.addEventListener('pointerup',()=>{off();brakeRelease()});
+  bb.addEventListener('pointerleave',()=>{off();brakeRelease()});
+  bb.addEventListener('pointercancel',()=>{off();brakeRelease()});
+  bb.addEventListener('keydown',e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();on();brakePress()}});
+  bb.addEventListener('keyup',e=>{if(e.key===' '||e.key==='Enter'){off();brakeRelease()}});
+}
 let tx=0,ty=0;
 cv.addEventListener('touchstart',e=>{const t=e.changedTouches[0];tx=t.clientX;ty=t.clientY},{passive:true});
 cv.addEventListener('touchend',e=>{const t=e.changedTouches[0],dx=t.clientX-tx,dy=t.clientY-ty;if(Math.max(Math.abs(dx),Math.abs(dy))<24)return;
