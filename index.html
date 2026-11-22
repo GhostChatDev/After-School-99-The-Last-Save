@@ -32,6 +32,10 @@ button.ghost{background:var(--panel);color:var(--text);border:2px solid var(--bo
 .pad button{font-size:22px;padding:0}.pad .u{grid-column:2;grid-row:1}.pad .l{grid-column:1;grid-row:2}.pad .d{grid-column:2;grid-row:2}.pad .r{grid-column:3;grid-row:2}
 @media (pointer:coarse),(max-width:700px){.pad{display:grid}}
 #toast{min-height:24px;text-align:center;color:var(--muted);font-size:14px}
+#card:has(.picker-grid){justify-content:flex-start;overflow-y:auto}
+.picker-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:min(100%,420px);gap:8px}
+.picker-grid button{min-width:0;padding:8px;font-size:13px}
+button:disabled{opacity:.48;cursor:not-allowed;filter:saturate(.5);box-shadow:none}
 .hidden{display:none!important}
 .help{color:var(--muted);font-size:13px;text-align:center}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -42,7 +46,7 @@ button.ghost{background:var(--panel);color:var(--text);border:2px solid var(--bo
   <div id="game" class="hidden">
     <div class="hud" style="margin-bottom:10px">
       <span id="hMission">Mission 1/12</span><span id="hMem">Memories 0/0</span>
-      <span class="row"><button class="ghost" id="bRestart" aria-label="Restart mission">Restart</button><button class="ghost" id="bMode">Mode: Step</button><button class="ghost" id="bSound">Sound: On</button><button class="ghost" id="bMenu">Menu</button></span>
+      <span class="row"><button class="ghost" id="bRestart" aria-label="Restart mission">Restart</button><button class="ghost" id="bMode">Mode: Step</button><button class="ghost" id="bSound">Sound: On</button><button class="ghost" id="bPicker">Missions</button><button class="ghost" id="bMenu">Menu</button></span>
     </div>
   </div>
   <div class="stage" id="stage">
@@ -85,14 +89,32 @@ function title(){
   $('game').classList.add('hidden');$('pad').classList.add('hidden');
   const b=[['New game',()=>{save={mission:0,finished:save.finished};store();startMission(0)}]];
   if(save.mission>0)b.unshift(['Continue: mission '+(save.mission+1),()=>startMission(save.mission)]);
+  b.push(['Choose mission',()=>missionPicker(false),1]);
   showCard('The Last Save',['Deep inside the old family computer, a tiny glowing ribbon named Pip wakes up.','Collect memories, grow longer, and find your way out of each one.'],b,'“Some things are worth saving twice.”'+(save.finished?'  ★ Completed':''));
+}
+function missionPicker(fromGame=true){
+  if(fromGame){over=true;running=false;card.classList.remove('hidden');card.innerHTML='';}
+  else { $('game').classList.add('hidden');$('pad').classList.add('hidden');card.classList.remove('hidden');card.innerHTML=''; }
+  const h=document.createElement('h2');h.textContent='Choose a memory';card.appendChild(h);
+  const p=document.createElement('p');p.textContent='Finish a memory to unlock the next one.';card.appendChild(p);
+  const grid=document.createElement('div');grid.className='picker-grid';
+  const unlocked=Math.min(M.length-1,save.mission);
+  M.forEach((mission,i)=>{
+    const button=document.createElement('button');button.textContent=(i<=unlocked?'▶ ':'🔒 ')+(i+1)+'. '+mission.title;
+    button.disabled=i>unlocked;button.setAttribute('aria-label',(i<=unlocked?'Play ':'Locked ')+(i+1)+'. '+mission.title);
+    if(i===idx&&L)button.classList.add('ghost');
+    button.onclick=()=>startMission(i);grid.appendChild(button);
+  });
+  card.appendChild(grid);
+  const row=document.createElement('div');row.className='row';
+  const back=document.createElement('button');back.className='ghost';back.textContent=fromGame?'Back to game':'Back to title';back.onclick=fromGame?()=>{hideCard();toast('Choose a direction to continue.')} :title;row.appendChild(back);card.appendChild(row);
 }
 function startMission(i){
   idx=i;L=Logic.parse(M[i]);S=Logic.newGame(L);dir='right';
   cv.width=L.w*CELL;cv.height=L.h*CELL;
   $('game').classList.remove('hidden');$('pad').classList.remove('hidden');
   save.mission=Math.max(0,i);store();hud();toast('');
-  showCard('Mission '+(i+1)+': '+M[i].title,M[i].intro,[['Play',()=>{hideCard();toast(mode==='step'?'Step mode: Pip moves when you do.':'Classic mode: Pip keeps moving.')}]]);
+  showCard('Mission '+(i+1)+': '+M[i].title,M[i].intro,[['Play',()=>{hideCard();toast(mode==='step'?'Step mode: Pip moves when you do.':'Classic mode: Pip keeps moving.') }]]);
 }
 function restart(){if(!L)return;S=Logic.newGame(L);dir='right';running=false;hud();hideCard();toast('')}
 function hud(){$('hMission').textContent='Mission '+(idx+1)+'/'+M.length;$('hMem').textContent=S?'Memories '+S.got+'/'+S.total:'Memories —';
@@ -126,6 +148,7 @@ cv.addEventListener('touchstart',e=>{const t=e.changedTouches[0];tx=t.clientX;ty
 cv.addEventListener('touchend',e=>{const t=e.changedTouches[0],dx=t.clientX-tx,dy=t.clientY-ty;if(Math.max(Math.abs(dx),Math.abs(dy))<24)return;
   move(Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up'))},{passive:true});
 $('bRestart').onclick=restart;
+$('bPicker').onclick=()=>missionPicker(true);
 $('bMenu').onclick=title;
 $('bMode').onclick=()=>{mode=mode==='step'?'classic':'step';running=false;store();hud();toast(mode==='step'?'Step mode: Pip moves when you do.':'Classic mode: Pip keeps moving. Choose a direction to start.')};
 $('bSound').onclick=()=>{sound=!sound;store();hud();SFX.frag()};
