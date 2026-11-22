@@ -3,8 +3,8 @@ const assert = require('node:assert/strict');
 const Logic = require('../js/logic.js');
 const { missions, ending } = require('../js/missions.js');
 
-test('there are 8 missions and an ending', () => {
-  assert.equal(missions.length, 8);
+test('there are 12 missions and an ending', () => {
+  assert.equal(missions.length, 12);
   assert.ok(ending.length > 0);
 });
 

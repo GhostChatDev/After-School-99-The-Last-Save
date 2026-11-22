@@ -1,6 +1,6 @@
 # After School ’99: The Last Save
 
-A Snake-style nostalgia adventure: 8 short missions and an ending. Pip is a glowing ribbon that grows with every memory spark. Collect all sparks, then reach the exit. Walls, Pip's own body, dust bunnies, locked doors and the exit before all sparks are collected end the run.
+A Snake-style nostalgia adventure: 12 short missions and an ending. Pip is a glowing ribbon that grows with every memory spark. Collect all sparks, then reach the exit. Walls, Pip's own body, dust bunnies, locked doors and the exit before all sparks are collected end the run.
 
 ## Run
 
