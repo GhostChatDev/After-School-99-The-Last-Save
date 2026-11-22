@@ -6,7 +6,7 @@
 
   function parse(def) {
     const rows = def.map;
-    const L = { title: def.title, w: rows[0].length, h: rows.length, grid: [], frags: [], portals: {}, bugs: [], start: null, exit: null, def: def };
+    const L = { title: def.title, w: rows[0].length, h: rows.length, grid: [], frags: [], portals: {}, bugs: [], guardians: [], start: null, exit: null, def: def };
     rows.forEach(function (row, y) {
       if (row.length !== L.w) throw new Error(def.title + ': row ' + y + ' has the wrong width');
       const cells = [];
@@ -15,6 +15,7 @@
         if (c === 'P') { L.start = [x, y]; c = '.'; }
         else if (c === 'h') { L.bugs.push({ x: x, y: y, dx: 1, dy: 0 }); c = '.'; }
         else if (c === 'v') { L.bugs.push({ x: x, y: y, dx: 0, dy: 1 }); c = '.'; }
+        else if (c === 'G') { L.guardians.push({ x: x, y: y, dx: 1, dy: 0 }); c = '.'; }
         else if (c === 'o') L.frags.push([x, y]);
         else if (c === '1' || c === '2') L.portals[c] = [x, y];
         else if (c === 'E') L.exit = [x, y];
@@ -33,6 +34,7 @@
   function newGame(L) {
     return { L: L, body: [L.start.slice()], mask: 0, got: 0, total: L.frags.length, hasKey: false,
       bugs: L.bugs.map(function (b) { return { x: b.x, y: b.y, dx: b.dx, dy: b.dy, px: b.x, py: b.y }; }),
+      guardians: L.guardians.map(function (g) { return { x: g.x, y: g.y, dx: g.dx, dy: g.dy, px: g.x, py: g.y, phase: 0 }; }),
       status: 'play', cause: '', events: [], moves: 0 };
   }
 
@@ -74,12 +76,26 @@
       if (b.x === nx && b.y === ny) return die('dust');
       if (b.px === nx && b.py === ny && b.x === head[0] && b.y === head[1]) return die('dust');
     }
+    n.guardians = s.guardians.map(function (g) {
+      const o = { x: g.x, y: g.y, dx: g.dx, dy: g.dy, px: g.px, py: g.py, phase: (g.phase + 1) % 4 };
+      if (o.phase === 0) {
+        let tx = o.x + o.dx, ty = o.y + o.dy;
+        if (blockedForBug(L, tx, ty)) { o.dx = -o.dx; o.dy = -o.dy; tx = o.x + o.dx; ty = o.y + o.dy; }
+        o.px = g.x; o.py = g.y; o.x = tx; o.y = ty;
+      }
+      return o;
+    });
+    for (const g of n.guardians) {
+      if (g.x === nx && g.y === ny) return die('guardian');
+      if (g.px === nx && g.py === ny && g.x === head[0] && g.y === head[1]) return die('guardian');
+    }
     return n;
   }
 
   function key(s) {
     return s.body.map(function (p) { return p[0] + ',' + p[1]; }).join(';') + '|' + s.mask + (s.hasKey ? 'k' : '') +
-      '|' + s.bugs.map(function (b) { return b.x + ',' + b.y + ',' + b.dx + b.dy; }).join(';');
+      '|' + s.bugs.map(function (b) { return b.x + ',' + b.y + ',' + b.dx + b.dy; }).join(';') +
+      '|' + s.guardians.map(function (g) { return g.x + ',' + g.y + ',' + g.dx + g.dy + ',' + g.phase; }).join(';');
   }
 
   // Breadth-first search for a winning list of moves (used by the tests to prove every mission can be won).

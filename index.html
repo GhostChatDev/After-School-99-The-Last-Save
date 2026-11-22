@@ -53,7 +53,8 @@ button.ghost{background:var(--panel);color:var(--text);border:2px solid var(--bo
   <div class="pad hidden" id="pad">
     <button class="u" data-d="up" aria-label="Up">▲</button><button class="l" data-d="left" aria-label="Left">◀</button><button class="d" data-d="down" aria-label="Down">▼</button><button class="r" data-d="right" aria-label="Right">▶</button>
   </div>
-  <p class="help">Arrow keys / WASD, swipe, or the on-screen pad. R restarts. Collect every spark, then reach the exit.</p>
+  <button id="bBrake" aria-label="Hold to brake" style="width:100%;margin-top:8px">HOLD BRAKE (SPACE)</button>
+  <p class="help">Arrow keys / WASD, swipe, or the on-screen pad. Hold Space or BRAKE to stop Pip. R restarts.</p>
 </main>
 <script src="js/logic.js"></script>
 <script src="js/missions.js"></script>
@@ -63,7 +64,7 @@ button.ghost{background:var(--panel);color:var(--text);border:2px solid var(--bo
 const M=Missions.missions,END=Missions.ending,SAVE='after-school-99-last-save-v1',CELL=40;
 const $=id=>document.getElementById(id);
 const cv=$('cv'),ctx=cv.getContext('2d'),card=$('card');
-let save={mission:0,finished:false},idx=0,L,S,dir='right',running=false,mode='step',sound=true,over=true,last=0,acc=0,audio=null;
+let save={mission:0,finished:false},idx=0,L,S,dir='right',running=false,brake=false,mode='step',sound=true,over=true,last=0,acc=0,audio=null;
 try{const s=JSON.parse(localStorage.getItem(SAVE));if(s&&Number.isInteger(s.mission)&&s.mission>=0&&s.mission<M.length)save={mission:s.mission,finished:s.finished===true};
  const o=JSON.parse(localStorage.getItem(SAVE+'-opts'));if(o){mode=o.mode==='classic'?'classic':'step';sound=o.sound!==false}}catch(e){}
 function store(){try{localStorage.setItem(SAVE,JSON.stringify(save));localStorage.setItem(SAVE+'-opts',JSON.stringify({mode,sound}))}catch(e){toast('This browser could not save progress; keep this tab open.')}}
@@ -96,11 +97,12 @@ function startMission(i){
 }
 function restart(){if(!L)return;S=Logic.newGame(L);dir='right';running=false;hud();hideCard();toast('')}
 function hud(){$('hMission').textContent='Mission '+(idx+1)+'/'+M.length;$('hMem').textContent='Memories '+S.got+'/'+S.total;
- $('bMode').textContent='Mode: '+(mode==='step'?'Step':'Classic');$('bSound').textContent='Sound: '+(sound?'On':'Off')}
-const WHY={wall:'Pip bumped into a wall.',self:'Pip tangled up in itself.',dust:'A dust bunny got Pip!',door:'The door is locked. Find the key first.',gate:'The exit stays shut until every memory is collected.'};
+ $('bMode').textContent='Mode: '+(mode==='step'?'Step':'Classic');$('bSound').textContent='Sound: '+(sound?'On':'Off');
+ $('bBrake').textContent=brake?'RELEASE BRAKE (SPACE)':'HOLD BRAKE (SPACE)';$('bBrake').setAttribute('aria-pressed',String(brake));$('hMem').textContent+=' · '+(brake?'Brake: holding still':'Brake: ready')}
+const WHY={wall:'Pip bumped into a wall.',self:'Pip tangled up in itself.',dust:'A dust bunny got Pip!',guardian:'The Dust Guardian swept into Pip. Hold Brake to let it pass.',door:'The door is locked. Find the key first.',gate:'The exit stays shut until every memory is collected.'};
 function move(d){
   if(over||!S)return;
-  if(mode==='classic'){const o={up:'down',down:'up',left:'right',right:'left'};if(S.body.length>1&&o[d]===dir)return;dir=d;running=true;return}
+  if(mode==='classic'){const o={up:'down',down:'up',left:'right',right:'left'};if(S.body.length>1&&o[d]===dir)return;dir=d;running=true;hud();return}
   dir=d;tick();
 }
 function tick(){
@@ -117,9 +119,15 @@ function tick(){
 const KEYS={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',s:'down',a:'left',d:'right',W:'up',S:'down',A:'left',D:'right'};
 addEventListener('keydown',e=>{
   if(e.metaKey||e.ctrlKey||e.altKey)return;
-  if(KEYS[e.key]){if(!over){e.preventDefault();move(KEYS[e.key])}}
+  if(e.code==='Space'){if(!over){e.preventDefault();brake=true;hud()}}
+  else if(KEYS[e.key]){if(!over){e.preventDefault();move(KEYS[e.key])}}
   else if((e.key==='r'||e.key==='R')&&L&&!over)restart();
 });
+addEventListener('keyup',e=>{if(e.code==='Space'){brake=false;hud()}});
+addEventListener('blur',()=>{brake=false;hud()});
+const brakeButton=$('bBrake');
+brakeButton.addEventListener('pointerdown',e=>{if(over)return;e.preventDefault();brake=true;brakeButton.setPointerCapture(e.pointerId);hud()});
+['pointerup','pointercancel','lostpointercapture'].forEach(name=>brakeButton.addEventListener(name,()=>{brake=false;hud()}));
 document.querySelectorAll('#pad button').forEach(b=>b.addEventListener('click',()=>move(b.dataset.d)));
 let tx=0,ty=0;
 cv.addEventListener('touchstart',e=>{const t=e.changedTouches[0];tx=t.clientX;ty=t.clientY},{passive:true});
@@ -145,13 +153,17 @@ function draw(t){
   }
   L.frags.forEach((f,i)=>{if(S.mask&(1<<i))return;const cx=f[0]*CELL+CELL/2,cy=f[1]*CELL+CELL/2;ctx.fillStyle='#fff7b0';ctx.beginPath();ctx.moveTo(cx,cy-12*pulse);ctx.lineTo(cx+9*pulse,cy);ctx.lineTo(cx,cy+12*pulse);ctx.lineTo(cx-9*pulse,cy);ctx.closePath();ctx.fill()});
   S.bugs.forEach(b=>{const cx=b.x*CELL+CELL/2,cy=b.y*CELL+CELL/2;ctx.fillStyle='#c9b8a0';ctx.beginPath();ctx.arc(cx,cy,14,0,7);ctx.fill();ctx.fillStyle='#8a7a66';ctx.beginPath();ctx.arc(cx-6,cy-10,5,0,7);ctx.arc(cx+6,cy-10,5,0,7);ctx.fill();ctx.fillStyle='#000';ctx.fillRect(cx-6,cy-3,3,5);ctx.fillRect(cx+3,cy-3,3,5)});
+  S.guardians.forEach(g=>{const cx=g.x*CELL+CELL/2,cy=g.y*CELL+CELL/2,warning=g.phase===3;
+    ctx.fillStyle=warning?'#ffd84a':'#ff6b81';ctx.beginPath();ctx.arc(cx,cy,17,0,7);ctx.fill();
+    if(warning){const tx=cx+g.dx*CELL,ty=cy+g.dy*CELL;ctx.strokeStyle='#fff7b0';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(tx,ty);ctx.stroke();ctx.fillStyle='#fff7b0';ctx.font='bold 12px monospace';ctx.textAlign='center';ctx.fillText('SWEEP!',cx,cy-23);ctx.textAlign='start'}
+    ctx.fillStyle='#0a0f20';ctx.fillRect(cx-8,cy-5,5,7);ctx.fillRect(cx+3,cy-5,5,7)});
   for(let i=S.body.length-1;i>=0;i--){const p=S.body[i],px=p[0]*CELL,py=p[1]*CELL,k=i/Math.max(1,S.body.length);
     ctx.fillStyle=i===0?'#9dffd6':'hsl(155,100%,'+(62-k*28)+'%)';ctx.fillRect(px+4,py+4,CELL-8,CELL-8);
     if(i===0){ctx.fillStyle='#0a0f20';const e=dir==='left'?[-5,-5]:dir==='right'?[5,-5]:dir==='up'?[0,-8]:[0,4];ctx.fillRect(px+CELL/2-8+e[0]*.4,py+CELL/2-6+e[1]*.4,5,6);ctx.fillRect(px+CELL/2+3+e[0]*.4,py+CELL/2-6+e[1]*.4,5,6)}}
   if(S.status==='dead'){ctx.fillStyle='rgba(255,107,129,.25)';ctx.fillRect(0,0,w,h)}
 }
 function frame(t){
-  if(running&&!over&&mode==='classic'){acc+=t-last;while(acc>=230&&running&&!over){acc-=230;tick()}}else acc=0;
+  if(running&&!over&&mode==='classic'&&!brake){acc+=t-last;while(acc>=230&&running&&!over&&!brake){acc-=230;tick()}}else acc=0;
   last=t;draw(t);requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
