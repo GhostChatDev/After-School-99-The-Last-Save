@@ -95,7 +95,7 @@ function startMission(i){
   showCard('Mission '+(i+1)+': '+M[i].title,M[i].intro,[['Play',()=>{hideCard();toast(mode==='step'?'Step mode: Pip moves when you do.':'Classic mode: Pip keeps moving.')}]]);
 }
 function restart(){if(!L)return;S=Logic.newGame(L);dir='right';running=false;hud();hideCard();toast('')}
-function hud(){$('hMission').textContent='Mission '+(idx+1)+'/'+M.length;$('hMem').textContent='Memories '+S.got+'/'+S.total;
+function hud(){$('hMission').textContent='Mission '+(idx+1)+'/'+M.length;$('hMem').textContent=S?'Memories '+S.got+'/'+S.total:'Memories —';
  $('bMode').textContent='Mode: '+(mode==='step'?'Step':'Classic');$('bSound').textContent='Sound: '+(sound?'On':'Off')}
 const WHY={wall:'Pip bumped into a wall.',self:'Pip tangled up in itself.',dust:'A dust bunny got Pip!',door:'The door is locked. Find the key first.',gate:'The exit stays shut until every memory is collected.'};
 function move(d){
