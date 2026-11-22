@@ -98,10 +98,9 @@ function startMission(i){
 function restart(){if(!L)return;S=Logic.newGame(L);dir='right';running=false;hud();hideCard();toast('')}
 function hud(){$('hMission').textContent='Mission '+(idx+1)+'/'+M.length;$('hMem').textContent=S?'Memories '+S.got+'/'+S.total:'Memories —';
  $('bMode').textContent='Mode: '+(mode==='step'?'Step':'Classic');$('bSound').textContent='Sound: '+(sound?'On':'Off');
- $('hBrake').textContent=brakeLabel();$('hBrake').style.color=S&&S.brake<0.25?'var(--danger)':'';
+ $('bBrake').textContent=brakeLabel();$('bBrake').hidden=!(L&&L.guardianRow!==null);$('bBrake').style.color=S&&S.brake<0.25?'var(--danger)':'';
  $('hHazard').textContent=guardianText()}
-function brakeLabel(){return S?('BRAKE '+Math.round(S.brake*100)+'%'+(S.braking?' ●ON':'')):'BRAKE'}
-function guardianText(){ // amber for the two warning beats, red while the guardian sweeps its row
+function brakeLabel(){return S?('BRAKE '+Math.round(S.brake*100)+'%'+(S.braking?' ●ON':'')):'BRAKE'}function guardianText(){ // amber for the two warning beats, red while the guardian sweeps its row
   if(!S||!L||L.guardianRow===null)return '';
   const ph=S.moves%4;
   return ph<2?'Guardian: warning':(S.braking&&ph===2?'Guardian: crossing…':'Guardian: sweeping');
@@ -135,7 +134,9 @@ function brakePress(){if(!S||S.status!=='play')return;applyBrake(true)}
 function brakeRelease(){if(!S)return;applyBrake(false)}
 function applyBrake(on){
   if(S.status!=='play'){hud();return}
-  if(!S.brake&&on)return; // an empty meter can't brake
+  const has=L&&L.guardianRow!==null;
+  if(!has&&on)return;
+  if(S.brake<=0&&on)return; // an empty meter can't brake
   const n=Logic.setBrake(S,on);
   if(n!==S){S=n;}
   hud();
