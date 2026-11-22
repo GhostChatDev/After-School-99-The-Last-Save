@@ -62,7 +62,7 @@ button.ghost{background:var(--panel);color:var(--text);border:2px solid var(--bo
   <div id="game" class="hidden">
     <div class="hud" style="margin-bottom:10px">
       <span id="hMission">Mission 1/12</span><span id="hMem">Memories 0/0</span>
-      <span class="row"><button class="ghost" id="bRestart" aria-label="Restart mission">Restart</button><button class="ghost" id="bMode">Mode: Step</button><button class="ghost" id="bCtrl" title="Switch thumb controller layout">Controls: Split</button><button class="ghost" id="bSound">Music &amp; SFX: On</button><button class="ghost" id="bPicker">Missions</button><button class="ghost" id="bMenu">Menu</button></span>
+      <span class="row"><button class="ghost" id="bRestart" aria-label="Restart mission">Restart</button><button class="ghost" id="bPractice">Practice: Off</button><button class="ghost" id="bMode">Mode: Step</button><button class="ghost" id="bCtrl" title="Switch thumb controller layout">Controls: Split</button><button class="ghost" id="bSound">Music &amp; SFX: On</button><button class="ghost" id="bPicker">Missions</button><button class="ghost" id="bMenu">Menu</button></span>
     </div>
   </div>
   <div class="stage" id="stage">
@@ -91,17 +91,19 @@ button.ghost{background:var(--panel);color:var(--text);border:2px solid var(--bo
 </main>
 <script src="js/logic.js"></script>
 <script src="js/missions.js"></script>
+<script src="js/gd-render.js"></script>
 <script>
 (function(){
 'use strict';
 const M=Missions.missions,END=Missions.ending,SAVE='after-school-99-last-save-v1',CELL=40;
 const $=id=>document.getElementById(id);
 const cv=$('cv'),ctx=cv.getContext('2d'),card=$('card');
+let skinI=0,faceI=0,practice=false,cp=null,attempts=0,parts=[];
 let save={mission:0,finished:false},idx=0,L,S,dir='right',running=false,mode='step',sound=true,ctrl='split',over=true,last=0,acc=0,audio=null;
 const CTRLS=['split','left','right'],CTRL_NAMES={split:'Split',left:'Left Pad',right:'Right Pad'};
 try{const s=JSON.parse(localStorage.getItem(SAVE));if(s&&Number.isInteger(s.mission)&&s.mission>=0&&s.mission<M.length)save={mission:s.mission,finished:s.finished===true};
- const o=JSON.parse(localStorage.getItem(SAVE+'-opts'));if(o){mode=o.mode==='classic'?'classic':'step';sound=o.sound!==false;if(CTRLS.includes(o.ctrl))ctrl=o.ctrl}}catch(e){}
-function store(){try{localStorage.setItem(SAVE,JSON.stringify(save));localStorage.setItem(SAVE+'-opts',JSON.stringify({mode,sound,ctrl}))}catch(e){toast('This browser could not save progress; keep this tab open.')}}
+ const o=JSON.parse(localStorage.getItem(SAVE+'-opts'));if(o){mode=o.mode==='classic'?'classic':'step';sound=o.sound!==false;if(CTRLS.includes(o.ctrl))ctrl=o.ctrl;if(Number.isInteger(o.skin)&&o.skin>=0&&o.skin<GDRender.SKINS.length)skinI=o.skin;if(Number.isInteger(o.face)&&o.face>=0&&o.face<GDRender.FACES.length)faceI=o.face}}catch(e){}
+function store(){try{localStorage.setItem(SAVE,JSON.stringify(save));localStorage.setItem(SAVE+'-opts',JSON.stringify({mode,sound,ctrl,skin:skinI,face:faceI}))}catch(e){toast('This browser could not save progress; keep this tab open.')}}
 function toast(t){$('toast').textContent=t}
 let audioUnlocked=false;
 function unlockAudio(){
@@ -165,13 +167,13 @@ function missionPicker(fromGame=true){
   const back=document.createElement('button');back.className='ghost';back.textContent=fromGame?'Back to game':'Back to title';back.onclick=fromGame?()=>{hideCard();toast('Choose a direction to continue.')} :title;row.appendChild(back);card.appendChild(row);
 }
 function startMission(i){
-  idx=i;L=Logic.parse(M[i]);S=Logic.newGame(L);dir='right';
+  idx=i;L=Logic.parse(M[i]);S=Logic.newGame(L);dir='right';cp=null;attempts=1;parts=[];
   cv.width=L.w*CELL;cv.height=L.h*CELL;
   $('game').classList.remove('hidden');$('pad').classList.remove('hidden');
   save.mission=Math.max(0,i);store();hud();toast('');
   showCard('Mission '+(i+1)+': '+M[i].title,M[i].intro,[['Play',()=>{hideCard();toast(mode==='step'?'Step mode: Pip moves when you do.':'Classic mode: Pip keeps moving.')}]]);
 }
-function restart(){if(!L)return;S=Logic.newGame(L);dir='right';running=false;hud();hideCard();toast('')}
+function restart(){if(!L)return;if(practice&&cp){S=cp}else{S=Logic.newGame(L);cp=null}dir='right';running=false;parts=[];attempts++;hud();hideCard();toast(practice&&cp?'Back at your checkpoint.':'')}
 function applyCtrl(){
   const pad=$('pad'),isSplit=ctrl==='split';
   pad.dataset.layout=ctrl;
@@ -179,8 +181,8 @@ function applyCtrl(){
   $('padSplitR').classList.toggle('hidden',!isSplit);
   $('padCross').classList.toggle('hidden',isSplit);
 }
-function hud(){$('hMission').textContent='Mission '+(idx+1)+'/'+M.length;$('hMem').textContent=S?'Memories '+S.got+'/'+S.total:'Memories —';
- $('bMode').textContent='Mode: '+(mode==='step'?'Step':'Classic');$('bCtrl').textContent='Controls: '+CTRL_NAMES[ctrl];$('bSound').textContent='Music & SFX: '+(sound?'On':'Off');applyCtrl()}
+function hud(){$('hMission').textContent='Mission '+(idx+1)+'/'+M.length;$('hMem').textContent=S?'Memories '+S.got+'/'+S.total+(attempts?' · Attempt '+attempts:''):'Memories —';
+ $('bPractice').textContent='Practice: '+(practice?'On':'Off');$('bMode').textContent='Mode: '+(mode==='step'?'Step':'Classic');$('bCtrl').textContent='Controls: '+CTRL_NAMES[ctrl];$('bSound').textContent='Music & SFX: '+(sound?'On':'Off');applyCtrl()}
 const WHY={wall:'Pip bumped into a wall.',spike:'Pip touched a corrupted red sector!',self:'Pip tangled up in itself.',dust:'A dust bunny got Pip!',door:'The door is locked. Find the key first.',gate:'The exit stays shut until every memory is collected.'};
 function move(d){
   if(over||!S)return;
@@ -190,7 +192,8 @@ function move(d){
 function tick(){
   const n=Logic.step(S,dir);if(n===S)return;S=n;
   if(!n.events.length)SFX.step();
-  n.events.forEach(e=>{if(SFX[e])SFX[e]()});hud();
+  n.events.forEach(e=>{if(SFX[e])SFX[e]()});const hp=n.body[0];parts.push({x:hp[0]*CELL+CELL/2,y:hp[1]*CELL+CELL/2,life:1});if(parts.length>40)parts.shift();
+  if(practice&&n.status==='play'&&n.got>0&&(!cp||n.got>cp.got))cp=n;hud();
   if(S.status==='dead'){running=false;toast(WHY[S.cause]||'Oops!');
     setTimeout(()=>showCard('Oops!',WHY[S.cause]||'Try again.',[['Try again',restart]]),350)}
   else if(S.status==='won'){running=false;save.mission=idx+1<M.length?idx+1:0;if(idx+1>=M.length)save.finished=true;store();
@@ -217,10 +220,23 @@ cv.addEventListener('touchend',e=>{const t=e.changedTouches[0],dx=t.clientX-tx,d
 $('bRestart').onclick=restart;
 $('bPicker').onclick=()=>missionPicker(true);
 $('bMenu').onclick=title;
+$('bPractice').onclick=()=>{practice=!practice;cp=null;hud();toast(practice?'Practice: a checkpoint is saved each time you collect a memory.':'Practice off.')};
 $('bMode').onclick=()=>{mode=mode==='step'?'classic':'step';running=false;store();hud();toast(mode==='step'?'Step mode: Pip moves when you do.':'Classic mode: Pip keeps moving. Choose a direction to start.')};
 $('bCtrl').onclick=()=>{ctrl=CTRLS[(CTRLS.indexOf(ctrl)+1)%CTRLS.length];store();hud();toast(ctrl==='split'?'Split thumb controls: Left thumb ◀ ▶, Right thumb ▲ ▼.':ctrl==='left'?'Left corner D-pad active.':'Right corner D-pad active.')};
 $('bSound').onclick=()=>{sound=!sound;store();hud();SFX.frag()};
 
+function drawFace(cx,cy){
+  const f=GDRender.FACES[faceI].id,o=dir==='left'?-2:dir==='right'?2:0,v=dir==='up'?-2:dir==='down'?2:0;
+  ctx.fillStyle='#070a18';
+  if(f==='visor'){ctx.fillRect(cx-11,cy-6+v,22,7);ctx.fillStyle='#00f6ff';ctx.fillRect(cx-9+o,cy-4+v,18,3);return}
+  if(f==='cyclops'){ctx.beginPath();ctx.arc(cx+o,cy-2+v,6,0,7);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(cx+o,cy-2+v,3,0,7);ctx.fill()}
+  else{ctx.fillRect(cx-8+o,cy-6+v,5,6);ctx.fillRect(cx+3+o,cy-6+v,5,6);
+    if(f==='determined'){ctx.beginPath();ctx.moveTo(cx-10,cy-10);ctx.lineTo(cx-1,cy-6);ctx.lineTo(cx-1,cy-8);ctx.lineTo(cx-10,cy-12);ctx.fill();ctx.beginPath();ctx.moveTo(cx+10,cy-10);ctx.lineTo(cx+1,cy-6);ctx.lineTo(cx+1,cy-8);ctx.lineTo(cx+10,cy-12);ctx.fill()}
+    if(f==='happy'){ctx.fillStyle='#fff';ctx.fillRect(cx-7+o,cy-5+v,2,2);ctx.fillRect(cx+4+o,cy-5+v,2,2)}}
+  ctx.strokeStyle='#070a18';ctx.lineWidth=2;ctx.beginPath();
+  if(f==='determined'){ctx.moveTo(cx-6,cy+8);ctx.lineTo(cx+6,cy+8)}else ctx.arc(cx,cy+3,6,.15*Math.PI,.85*Math.PI);
+  ctx.stroke();
+}
 function draw(t){
   const w=cv.width,h=cv.height;ctx.fillStyle='#0a0f20';ctx.fillRect(0,0,w,h);
   if(!L){ctx.fillStyle='#16204a';for(let y=0;y<9;y++)for(let x=0;x<11;x++)if((x+y)%2)ctx.fillRect(x*CELL,y*CELL,CELL,CELL);return}
@@ -234,7 +250,7 @@ function draw(t){
       ctx.fillStyle='#3c4d99';ctx.fillRect(px+6,py+12,CELL-12,2);ctx.fillRect(px+10,py+22,CELL-20,2);
       continue;
     }
-    ctx.fillStyle=(x+y)%2?'#10183a':'#0c122e';ctx.fillRect(px,py,CELL,CELL);
+    ctx.fillStyle=(x+y)%2?'#0a1f5c':'#071a4d';ctx.fillRect(px,py,CELL,CELL);ctx.strokeStyle='rgba(0,246,255,'+(0.16+0.06*Math.sin(t/400+x+y))+')';ctx.lineWidth=1;ctx.strokeRect(px+.5,py+.5,CELL-1,CELL-1);
     ctx.fillStyle='rgba(77,255,181,.04)';ctx.fillRect(px+CELL/2-1,py+CELL/2-1,2,2);
     if(c==='x'){
       ctx.fillStyle='rgba(255,60,95,'+(0.22+0.1*gl)+')';ctx.fillRect(px+3,py+3,CELL-6,CELL-6);
@@ -253,14 +269,14 @@ function draw(t){
     ctx.fillStyle='#ffd84a';ctx.fillRect(cx-10*pulse,cy-10*pulse,20*pulse,20*pulse);
     ctx.fillStyle='#11172c';ctx.fillRect(cx-6*pulse,cy-9*pulse,12*pulse,6*pulse);
     ctx.fillStyle='#fff7b0';ctx.fillRect(cx-7*pulse,cy+1*pulse,14*pulse,8*pulse)});
-  S.bugs.forEach(b=>{const cx=b.x*CELL+CELL/2,cy=b.y*CELL+CELL/2;
-    ctx.fillStyle='#d8c4ff';ctx.beginPath();ctx.arc(cx,cy,13*pulse,0,7);ctx.fill();
-    ctx.fillStyle='#9b7ede';ctx.beginPath();ctx.arc(cx-7,cy-10,5,0,7);ctx.arc(cx+7,cy-10,5,0,7);ctx.fill();
-    ctx.fillStyle='#ff2a55';ctx.fillRect(cx-6,cy-3,4,5);ctx.fillRect(cx+2,cy-3,4,5)});
-  for(let i=S.body.length-1;i>=0;i--){const p=S.body[i],px=p[0]*CELL,py=p[1]*CELL,k=i/Math.max(1,S.body.length);
-    ctx.fillStyle=i===0?'#9dffd6':'hsl(155,100%,'+(62-k*28)+'%)';ctx.fillRect(px+4,py+4,CELL-8,CELL-8);
-    if(i>0){ctx.fillStyle='rgba(255,255,255,.18)';ctx.fillRect(px+7,py+7,CELL-14,4)}
-    if(i===0){ctx.fillStyle='#0a0f20';const e=dir==='left'?[-5,-5]:dir==='right'?[5,-5]:dir==='up'?[0,-8]:[0,4];ctx.fillRect(px+CELL/2-8+e[0]*.4,py+CELL/2-6+e[1]*.4,5,6);ctx.fillRect(px+CELL/2+3+e[0]*.4,py+CELL/2-6+e[1]*.4,5,6)}}
+  S.bugs.forEach((b,i)=>GDRender.drawGhostMascot(ctx,b.x*CELL+CELL/2,b.y*CELL+CELL/2,13*pulse,t,b.dx!==0||b.dy!==0,i*1.7));
+  const sk=GDRender.SKINS[skinI];
+  parts.forEach(q=>{q.life-=.03;ctx.globalAlpha=Math.max(0,q.life)*.6;ctx.fillStyle=sk.trail;ctx.fillRect(q.x-4*q.life,q.y-4*q.life,8*q.life,8*q.life)});ctx.globalAlpha=1;parts=parts.filter(q=>q.life>0);
+  for(let i=S.body.length-1;i>=0;i--){const p=S.body[i],px=p[0]*CELL,py=p[1]*CELL;
+    ctx.fillStyle=i===0?sk.primary:sk.secondary;ctx.fillRect(px+3,py+3,CELL-6,CELL-6);
+    ctx.strokeStyle='#070a18';ctx.lineWidth=2.5;ctx.strokeRect(px+3,py+3,CELL-6,CELL-6);
+    if(i>0){ctx.fillStyle=i%2?sk.primary:sk.secondary;ctx.fillRect(px+9,py+9,CELL-18,CELL-18)}
+    else drawFace(px+CELL/2,py+CELL/2)}
   if(S.status==='dead'){ctx.fillStyle='rgba(255,107,129,.28)';ctx.fillRect(0,0,w,h)}
 }
 function frame(t){
