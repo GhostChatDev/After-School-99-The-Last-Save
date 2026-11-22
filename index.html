@@ -24,6 +24,9 @@ canvas{display:block;width:100%;height:auto;image-rendering:pixelated;touch-acti
 .card p{margin:0;max-width:44ch;color:var(--text)}
 .card .tag{color:var(--pip);font-style:italic}
 .row{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.picker-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:min(100%,420px);gap:8px}
+.picker-grid button{min-width:0;padding:8px;font-size:13px}
+button:disabled{opacity:.48;cursor:not-allowed;filter:saturate(.5);box-shadow:none}
 button{min-height:44px;min-width:44px;padding:8px 16px;font:700 16px "Courier New",monospace;color:var(--bg);background:var(--accent);border:0;border-radius:var(--r);cursor:pointer;box-shadow:0 3px 0 #a38a1d;transition:transform .12s,filter .12s}
 button:hover{filter:brightness(1.1)}button:active{transform:translateY(2px);box-shadow:0 1px 0 #a38a1d}
 button:focus-visible{outline:3px solid #fff;outline-offset:2px}
@@ -114,7 +117,7 @@ function startMission(i){
   cv.width=L.w*CELL;cv.height=L.h*CELL;
   $('game').classList.remove('hidden');$('pad').classList.remove('hidden');
   save.mission=Math.max(0,i);store();hud();toast('');
-  showCard('Mission '+(i+1)+': '+M[i].title,M[i].intro,[['Play',()=>{hideCard();toast(mode==='step'?'Step mode: Pip moves when you do.':'Classic mode: Pip keeps moving.') }]]);
+  showCard('Mission '+(i+1)+': '+M[i].title,M[i].intro,[['Play',()=>{hideCard();toast(mode==='step'?'Step mode: Pip moves when you do.':'Classic mode: Pip keeps moving.')}]]);
 }
 function restart(){if(!L)return;S=Logic.newGame(L);dir='right';running=false;hud();hideCard();toast('')}
 function hud(){$('hMission').textContent='Mission '+(idx+1)+'/'+M.length;$('hMem').textContent=S?'Memories '+S.got+'/'+S.total:'Memories —';
