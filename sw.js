@@ -1,6 +1,7 @@
-const CACHE = 'after-school-99-chapter-one-v8';
+const CACHE = 'after-school-99-chapter-one-v11';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon.svg', './js/logic.js', './js/missions.js'];
 self.addEventListener('install', event => {
+  self.skipWaiting();
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES)));
 });
 self.addEventListener('activate', event => {
@@ -8,5 +9,9 @@ self.addEventListener('activate', event => {
 });
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET' || new URL(event.request.url).origin !== self.location.origin) return;
-  event.respondWith(caches.match(event.request).then(cached => cached || fetch(event.request)));
+  event.respondWith(fetch(event.request).then(res => {
+    const copy = res.clone();
+    caches.open(CACHE).then(c => c.put(event.request, copy)).catch(() => {});
+    return res;
+  }).catch(() => caches.match(event.request)));
 });

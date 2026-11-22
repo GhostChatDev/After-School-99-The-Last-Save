@@ -36,7 +36,7 @@
       status: 'play', cause: '', events: [], moves: 0 };
   }
 
-  function blockedForBug(L, x, y) { const c = cell(L, x, y); return c === '#' || c === 'D' || c === 'E'; }
+  function blockedForBug(L, x, y) { const c = cell(L, x, y); return c === '#' || c === 'x' || c === 'D' || c === 'E'; }
 
   // One move. Returns a NEW state; returns the same object when the move is ignored (reversing into the neck).
   function step(s, dirName) {
@@ -48,6 +48,7 @@
     const die = function (cause) { n.status = 'dead'; n.cause = cause; n.events.push('die'); return n; };
     const c = cell(L, nx, ny);
     if (c === '#') return die('wall');
+    if (c === 'x') return die('spike');
     if (c === 'D' && !s.hasKey) return die('door');
     if (c === 'E' && s.got < s.total) return die('gate');
     if (c === '1' || c === '2') { const o = L.portals[c === '1' ? '2' : '1']; nx = o[0]; ny = o[1]; n.events.push('portal'); }
