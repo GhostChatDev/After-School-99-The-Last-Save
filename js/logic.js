@@ -3,6 +3,9 @@
 (function (root) {
   'use strict';
   const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
+  // Brake: a rechargeable meter (1 = full). While braking it drains by BRAKE.drain per move; when released it refills by BRAKE.fill.
+  const BRAKE = { drain: 1 / 24, fill: 1 / 16 };
+  function setBrake(s, on) { if (s.braking === !!on) return s; return Object.assign({}, s, { braking: !!on }); }
 
   function parse(def) {
     const rows = def.map;
@@ -48,6 +51,7 @@
     let nx = head[0] + d[0], ny = head[1] + d[1];
     if (s.body.length > 1 && s.body[1][0] === nx && s.body[1][1] === ny) return s;
     const n = Object.assign({}, s, { events: [], moves: s.moves + 1 });
+    n.brake = s.braking ? Math.max(0, s.brake - BRAKE.drain) : Math.min(1, s.brake + BRAKE.fill);
     const die = function (cause) { n.status = 'dead'; n.cause = cause; n.events.push('die'); return n; };
     const c = cell(L, nx, ny);
     if (c === '#') return die('wall');
@@ -112,6 +116,6 @@
     return null;
   }
 
-  const api = { DIRS: DIRS, parse: parse, cell: cell, newGame: newGame, step: step, solve: solve, key: key };
+  const api = { DIRS: DIRS, BRAKE: BRAKE, parse: parse, cell: cell, newGame: newGame, step: step, solve: solve, key: key, setBrake: setBrake };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Logic = api;
 })(typeof self !== 'undefined' ? self : this);
