@@ -82,6 +82,19 @@
       '|' + s.bugs.map(function (b) { return b.x + ',' + b.y + ',' + b.dx + b.dy; }).join(';');
   }
 
+  // Restore only paths that the current rules can reproduce; malformed saves fall back to the start.
+  function restore(L, moves) {
+    if (typeof moves !== 'string' || moves.length > 10000 || /[^udlr]/.test(moves)) return null;
+    const names = { u: 'up', d: 'down', l: 'left', r: 'right' };
+    let state = newGame(L);
+    for (const move of moves) {
+      const next = step(state, names[move]);
+      if (next === state || next.status !== 'play') return null;
+      state = next;
+    }
+    return state;
+  }
+
   // Breadth-first search for a winning list of moves (used by the tests to prove every mission can be won).
   function solve(L, limit) {
     limit = limit || 400000;
