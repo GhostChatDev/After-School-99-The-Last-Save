@@ -25,6 +25,7 @@
       L.grid.push(cells);
     });
     if (!L.start || !L.exit) throw new Error(def.title + ': needs P and E');
+    L.terminals.sort(function (a, b) { return a.id.localeCompare(b.id); });
     return L;
   }
 
@@ -63,6 +64,9 @@
     if (!ate) n.body.pop();
     if (ate) { n.mask = s.mask | (1 << fi); n.got = s.got + 1; n.events.push(n.got === n.total ? 'last' : 'frag'); }
     if (cell(L, nx, ny) === 'K' && !s.hasKey) { n.hasKey = true; n.events.push('key'); }
+    const terminal = L.terminals.findIndex(function (t) { return t.x === nx && t.y === ny; });
+    if (terminal === s.terminalCount) { n.terminalCount++; n.events.push('terminal'); }
+    else if (terminal > s.terminalCount) { n.terminalCount = 0; n.events.push('terminal-reset'); }
     if (cell(L, nx, ny) === 'E') { n.status = 'won'; n.events.push('win'); return n; }
     n.bugs = s.bugs.map(function (b) {
       const o = { x: b.x, y: b.y, dx: b.dx, dy: b.dy };
@@ -83,6 +87,7 @@
 
   function key(s) {
     return s.body.map(function (p) { return p[0] + ',' + p[1]; }).join(';') + '|' + s.mask + (s.hasKey ? 'k' : '') +
+      '|' + s.terminalCount + '|' + (s.L.guardianRow === null ? 0 : s.moves % 4) +
       '|' + s.bugs.map(function (b) { return b.x + ',' + b.y + ',' + b.dx + b.dy; }).join(';');
   }
 
