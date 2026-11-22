@@ -260,7 +260,14 @@ function draw(t){
   for(let i=S.body.length-1;i>=0;i--){const p=S.body[i],px=p[0]*CELL,py=p[1]*CELL,k=i/Math.max(1,S.body.length);
     ctx.fillStyle=i===0?'#9dffd6':'hsl(155,100%,'+(62-k*28)+'%)';ctx.fillRect(px+4,py+4,CELL-8,CELL-8);
     if(i>0){ctx.fillStyle='rgba(255,255,255,.18)';ctx.fillRect(px+7,py+7,CELL-14,4)}
-    if(i===0){ctx.fillStyle='#0a0f20';const e=dir==='left'?[-5,-5]:dir==='right'?[5,-5]:dir==='up'?[0,-8]:[0,4];ctx.fillRect(px+CELL/2-8+e[0]*.4,py+CELL/2-6+e[1]*.4,5,6);ctx.fillRect(px+CELL/2+3+e[0]*.4,py+CELL/2-6+e[1]*.4,5,6)}}
+    if(i===0){ctx.strokeStyle='#4dffb5';ctx.lineWidth=2;ctx.strokeRect(px+3,py+3,CELL-6,CELL-6);
+      ctx.fillStyle='#0a0f20';const e=dir==='left'?[-5,-5]:dir==='right'?[5,-5]:dir==='up'?[0,-8]:[0,4];const ex=px+CELL/2+e[0]*.4,ey=py+CELL/2-6+e[1]*.4;
+      ctx.fillRect(ex-8,ey,5,6);ctx.fillRect(ex+3,ey,5,6);
+      const tier=Math.min(2,Math.floor(idx/4));ctx.strokeStyle='#0a0f20';ctx.lineWidth=2;ctx.beginPath();
+      if(tier===0){ctx.arc(ex,ey+9,6,0.15*Math.PI,0.85*Math.PI)}
+      else if(tier===1){ctx.moveTo(ex-5,ey+12);ctx.lineTo(ex+5,ey+12)}
+      else{ctx.moveTo(ex-6,ey-2);ctx.lineTo(ex-2,ey+2);ctx.moveTo(ex+6,ey-2);ctx.lineTo(ex+2,ey+2);ctx.moveTo(ex-5,ey+13);ctx.lineTo(ex+5,ey+13)}
+      ctx.stroke()}}
   if(S.status==='dead'){ctx.fillStyle='rgba(255,107,129,.28)';ctx.fillRect(0,0,w,h)}
 }
 function frame(t){
