@@ -90,6 +90,35 @@
             '#############'],
       outro: 'Pip saves the memory twice: once on the disk, and once in you.' }
   ];
+  // The drive folds old folders into new paths: mirrored layouts turn familiar routes around.
+  const finalMission = missions.pop();
+  const source = missions.concat([finalMission]);
+  const extraStories = [
+    ['The Hallway Bell', 'The school bell rings inside a tiny sound file.', 'A bell rings; everyone races out into the afternoon.'],
+    ['The Bus Window', 'The road home runs in the opposite direction today.', 'Rain makes the streetlights look like little stars.'],
+    ['Pocket Change', 'A few forgotten sparks wait behind the shelves.', 'Two coins and a ticket stub fall out of a coat.'],
+    ['Recess Patrol', 'The dust bunnies are still keeping watch.', 'Chalk marks the place where the game began.'],
+    ['The Other Disk', 'Follow the paired portals through a copied folder.', 'The disk has a handwritten star on its label.'],
+    ['Static on Tape', 'Find the key before the tape runs out of memories.', 'A voice says: see you after school.'],
+    ['The Treehouse Plan', 'The paths twist between sketches and scraps.', 'A crooked blueprint shows room for everyone.'],
+    ['A Borrowed Game', 'A familiar puzzle has been turned around.', 'A friend wrote their name inside the game box.'],
+    ['Library Card', 'Search the shelves for every missing spark.', 'The card is full of dates and pencilled stars.'],
+    ['Rainy Afternoon', 'One last walk through the rooms of an old day.', 'Rain drums on the roof while a computer hums.'],
+    ['The Spare Key', 'A locked folder hides another small discovery.', 'The key was taped under the desk all along.'],
+    ['Lost and Found', 'The dust bunnies have gathered around the keepsakes.', 'A lost photograph finds its way home.'],
+    ['A Second Shortcut', 'The portals link two sides of the same memory.', 'A maze drawn on paper matches the screen.'],
+    ['Family Recording', 'The recording is safe beyond the locked door.', 'A chorus of voices counts down to the candles.'],
+    ['The Box of Drawings', 'Take care through the narrow passages.', 'Every drawing is signed, even the unfinished ones.'],
+    ['The Backup Disk', 'Collect the last fragments before restoring the archive.', 'The disk spins up. There is still time to make a copy.']
+  ];
+  extraStories.forEach(function (story, i) {
+    const template = source[i % source.length];
+    const map = i < 8
+      ? template.map.map(function (row) { return Array.from(row).reverse().join(''); })
+      : template.map.slice().reverse();
+    missions.push({ title: story[0], intro: story[1], map: map, outro: story[2] });
+  });
+  missions.push(finalMission);
   const ending = ['The screen glows one last time.',
     'You did not need to stay in the past to keep it.',
     'Some things are worth saving twice.',
