@@ -23,6 +23,7 @@
 
 ## Components
 - Title screen with Start / Continue.
+- Title screen look: Win98-style blue title bar (`C:\FAMILY_PC\LASTSAVE.EXE`), CRT-dark gradient, glowing yellow 30px Courier heading, glowing Start button, blinking cursor after the tagline.
 - Mission picker: finished and current missions open; later ones are labelled Locked.
 - Pause, Controls switch, Sound mute, Mode (Step / Classic).
 - Mission complete card and credits.

@@ -52,6 +52,12 @@ button.ghost{background:var(--panel);color:var(--text);border:2px solid var(--bo
 }
 #toast{min-height:22px;text-align:center;color:var(--muted);font-size:14px}
 #card:has(.picker-grid){justify-content:flex-start;overflow-y:auto}
+.card.title-screen{background:radial-gradient(circle at 50% 30%,rgba(30,41,84,.96),rgba(8,11,24,.97));gap:10px}
+.card.title-screen .bar{align-self:stretch;margin:-20px -20px 4px;padding:4px 10px;display:flex;justify-content:space-between;font:700 12px "Courier New",monospace;color:#fff;background:linear-gradient(90deg,#1c2b8a,#4a63d6);text-align:left}
+.card.title-screen h2{font-size:30px;letter-spacing:3px;color:var(--accent);text-shadow:0 0 12px rgba(255,216,74,.55),3px 3px 0 #000}
+.card.title-screen .row button:first-child{box-shadow:0 3px 0 #a38a1d,0 0 16px rgba(255,216,74,.45)}
+.card.title-screen .tag::after{content:"_";animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
 .hidden{display:none!important}
 .help{color:var(--muted);font-size:13px;text-align:center;margin:0}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -131,7 +137,7 @@ startMusic();
 const SFX={step:()=>beep(260,.04,'triangle',.045),frag:()=>{beep(587,.09,'square',.09);setTimeout(()=>beep(880,.14,'square',.09),65)},last:()=>{beep(587,.09,'square',.09);setTimeout(()=>beep(784,.09,'square',.09),70);setTimeout(()=>beep(1046,.2,'square',.1),140)},key:()=>{beep(784,.1,'square',.09);setTimeout(()=>beep(988,.15,'square',.09),80)},portal:()=>{beep(330,.09,'sine',.08);setTimeout(()=>beep(494,.14,'triangle',.08),60)},win:()=>{[523,659,784,1046].forEach((n,i)=>setTimeout(()=>beep(n,.18,'square',.1),i*95))},die:()=>{beep(160,.2,'sawtooth',.1);setTimeout(()=>beep(98,.3,'sawtooth',.1),120)}};
 
 function showCard(title,text,buttons,tag){
-  over=true;running=false;card.classList.remove('hidden');card.innerHTML='';
+  over=true;running=false;card.classList.remove('hidden','title-screen');card.innerHTML='';
   const h=document.createElement('h2');h.textContent=title;card.appendChild(h);
   (Array.isArray(text)?text:[text]).forEach(t=>{const p=document.createElement('p');p.textContent=t;card.appendChild(p)});
   if(tag){const p=document.createElement('p');p.className='tag';p.textContent=tag;card.appendChild(p)}
@@ -146,6 +152,9 @@ function title(){
   if(save.mission>0)b.unshift(['Continue: mission '+(save.mission+1),()=>startMission(save.mission)]);
   b.push(['Choose mission',()=>missionPicker(false),1]);
   showCard('The Last Save',['Deep inside the old family computer, a tiny glowing ribbon named Pip wakes up.','Collect memories, grow longer, and find your way out of each one.'],b,'“Some things are worth saving twice.”'+(save.finished?'  ★ Completed':''));
+  card.classList.add('title-screen');
+  const bar=document.createElement('div');bar.className='bar';bar.setAttribute('aria-hidden','true');
+  bar.innerHTML='<span>C:\\FAMILY_PC\\LASTSAVE.EXE</span><span>_ □ ×</span>';card.insertBefore(bar,card.firstChild);
 }
 function missionPicker(fromGame=true){
   if(fromGame){over=true;running=false;card.classList.remove('hidden');card.innerHTML='';}
