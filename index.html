@@ -31,9 +31,9 @@ button{min-height:44px;min-width:44px;padding:8px 16px;font:700 16px "Courier Ne
 button:hover{filter:brightness(1.1)}button:active{transform:translateY(2px);box-shadow:0 1px 0 #a38a1d}
 button:focus-visible{outline:3px solid #fff;outline-offset:2px}
 button.ghost{background:var(--panel);color:var(--text);border:2px solid var(--border);box-shadow:none}
-.ctrl-bar{width:100%;max-width:960px;display:flex;justify-content:space-between;align-items:flex-end;gap:16px;padding:4px 8px;pointer-events:none;touch-action:none}
-@media (min-width:920px) and (max-height:920px){
-  .ctrl-bar{position:fixed;left:0;right:0;bottom:max(18px,env(safe-area-inset-bottom));max-width:none;padding:0 max(24px,env(safe-area-inset-left)) 0 max(24px,env(safe-area-inset-right));z-index:10}
+.ctrl-bar{position:fixed;left:0;right:0;bottom:max(14px,env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:flex-end;gap:16px;padding:0 max(18px,env(safe-area-inset-left)) 0 max(18px,env(safe-area-inset-right));pointer-events:none;touch-action:none;z-index:20}
+@media (max-width:740px) and (orientation:portrait){
+  .ctrl-bar{position:static;width:100%;max-width:640px;padding:4px 4px 0}
 }
 .ctrl-cluster{pointer-events:auto;display:flex;gap:10px;align-items:center;background:rgba(17,23,44,.78);border:2px solid var(--border);border-radius:18px;padding:10px;box-shadow:0 8px 24px rgba(0,0,0,.55);backdrop-filter:blur(4px);touch-action:none}
 .ctrl-cluster.col{flex-direction:column}
@@ -89,8 +89,8 @@ button.ghost{background:var(--panel);color:var(--text);border:2px solid var(--bo
   </div>
   <p class="help">Left/Right thumb corners, swipe on board, or Arrow keys / WASD. Tap “Controls” to switch Split / Left / Right.</p>
 </main>
-<script src="js/logic.js"></script>
-<script src="js/missions.js"></script>
+<script src="js/logic.js?v=13"></script>
+<script src="js/missions.js?v=13"></script>
 <script>
 (function(){
 'use strict';
@@ -270,7 +270,7 @@ function frame(t){
 requestAnimationFrame(frame);
 title();
 if('serviceWorker' in navigator&&location.protocol.startsWith('http'))addEventListener('load',()=>{
-  navigator.serviceWorker.register('sw.js?v=12',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{});
+  navigator.serviceWorker.register('sw.js?v=13',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{});
   let refreshing=false;
   navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!refreshing){refreshing=true;location.reload()}});
 });
