@@ -9,8 +9,8 @@
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <style>
 :root{--bg:#11172c;--panel:#1b2442;--border:#3a4a86;--text:#f2f0e6;--muted:#b4bad4;--accent:#ffd84a;--pip:#4dffb5;--danger:#ff6b81;--r:10px}
-*{box-sizing:border-box}
-html,body{margin:0;min-height:100%;background:radial-gradient(circle at 50% 25%,#1e2954 0%,#0f1428 65%,#080b18 100%);color:var(--text);font:16px/1.5 "Trebuchet MS",Verdana,sans-serif}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;background:radial-gradient(circle at 50% 25%,#1e2954 0%,#0f1428 65%,#080b18 100%);color:var(--text);font:16px/1.5 "Trebuchet MS",Verdana,sans-serif;touch-action:manipulation;-webkit-user-select:none;user-select:none;overscroll-behavior:none;-webkit-text-size-adjust:100%}
 body{display:flex;flex-direction:column;align-items:center;justify-content:safe center;min-height:100vh;min-height:100svh;padding:12px;padding-bottom:max(12px,env(safe-area-inset-bottom));gap:10px}
 h1{font:700 20px/1.2 "Courier New",monospace;letter-spacing:1.5px;margin:0;color:var(--accent);text-align:center;text-shadow:0 0 10px rgba(255,216,74,.4),0 2px 0 #000}
 .shell{width:100%;max-width:640px;display:flex;flex-direction:column;gap:10px}
@@ -27,12 +27,12 @@ canvas{display:block;width:100%;height:auto;image-rendering:pixelated;touch-acti
 .picker-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:min(100%,420px);gap:8px}
 .picker-grid button{min-width:0;padding:8px;font-size:13px}
 button:disabled{opacity:.48;cursor:not-allowed;filter:saturate(.5);box-shadow:none}
-button{min-height:44px;min-width:44px;padding:8px 16px;font:700 16px "Courier New",monospace;color:var(--bg);background:var(--accent);border:0;border-radius:var(--r);cursor:pointer;box-shadow:0 3px 0 #a38a1d;transition:transform .12s,filter .12s}
+button{min-height:44px;min-width:44px;padding:8px 16px;font:700 16px "Courier New",monospace;color:var(--bg);background:var(--accent);border:0;border-radius:var(--r);cursor:pointer;box-shadow:0 3px 0 #a38a1d;transition:transform .12s,filter .12s;touch-action:none;-webkit-user-select:none;user-select:none}
 button:hover{filter:brightness(1.1)}button:active{transform:translateY(2px);box-shadow:0 1px 0 #a38a1d}
 button:focus-visible{outline:3px solid #fff;outline-offset:2px}
 button.ghost{background:var(--panel);color:var(--text);border:2px solid var(--border);box-shadow:none}
-.pad{display:none;grid-template-columns:repeat(3,64px);grid-template-rows:repeat(2,56px);gap:6px;justify-content:center}
-.pad button{font-size:22px;padding:0}.pad .u{grid-column:2;grid-row:1}.pad .l{grid-column:1;grid-row:2}.pad .d{grid-column:2;grid-row:2}.pad .r{grid-column:3;grid-row:2}
+.pad{display:none;grid-template-columns:repeat(3,64px);grid-template-rows:repeat(2,56px);gap:6px;justify-content:center;touch-action:none}
+.pad button{font-size:22px;padding:0;touch-action:none}.pad .u{grid-column:2;grid-row:1}.pad .l{grid-column:1;grid-row:2}.pad .d{grid-column:2;grid-row:2}.pad .r{grid-column:3;grid-row:2}
 @media (pointer:coarse),(max-width:700px){.pad{display:grid}}
 #toast{min-height:24px;text-align:center;color:var(--muted);font-size:14px}
 #card:has(.picker-grid){justify-content:flex-start;overflow-y:auto}
@@ -46,7 +46,7 @@ button.ghost{background:var(--panel);color:var(--text);border:2px solid var(--bo
   <div id="game" class="hidden">
     <div class="hud" style="margin-bottom:10px">
       <span id="hMission">Mission 1/12</span><span id="hMem">Memories 0/0</span>
-      <span class="row"><button class="ghost" id="bRestart" aria-label="Restart mission">Restart</button><button class="ghost" id="bMode">Mode: Step</button><button class="ghost" id="bSound">Sound: On</button><button class="ghost" id="bPicker">Missions</button><button class="ghost" id="bMenu">Menu</button></span>
+      <span class="row"><button class="ghost" id="bRestart" aria-label="Restart mission">Restart</button><button class="ghost" id="bMode">Mode: Step</button><button class="ghost" id="bSound">Music &amp; SFX: On</button><button class="ghost" id="bPicker">Missions</button><button class="ghost" id="bMenu">Menu</button></span>
     </div>
   </div>
   <div class="stage" id="stage">
@@ -72,13 +72,32 @@ try{const s=JSON.parse(localStorage.getItem(SAVE));if(s&&Number.isInteger(s.miss
  const o=JSON.parse(localStorage.getItem(SAVE+'-opts'));if(o){mode=o.mode==='classic'?'classic':'step';sound=o.sound!==false}}catch(e){}
 function store(){try{localStorage.setItem(SAVE,JSON.stringify(save));localStorage.setItem(SAVE+'-opts',JSON.stringify({mode,sound}))}catch(e){toast('This browser could not save progress; keep this tab open.')}}
 function toast(t){$('toast').textContent=t}
-function beep(f,d,type,v){if(!sound)return;try{audio=audio||new (window.AudioContext||window.webkitAudioContext)();if(audio.state==='suspended')audio.resume();const o=audio.createOscillator(),g=audio.createGain();o.type=type||'square';o.frequency.value=f;g.gain.setValueAtTime(v||.045,audio.currentTime);o.connect(g);g.connect(audio.destination);o.start();g.gain.exponentialRampToValueAtTime(.0001,audio.currentTime+d);o.stop(audio.currentTime+d)}catch(e){}}
-const MEL=[261.6,329.6,392,523.3,392,329.6,293.7,349.2,440,587.3,440,349.2,246.9,329.6,392,493.9,392,329.6,261.6,293.7,329.6,392,440,392];
+let audioUnlocked=false;
+function unlockAudio(){
+  try{
+    const AC=window.AudioContext||window.webkitAudioContext;
+    if(!AC)return;
+    audio=audio||new AC();
+    if(audio.state==='suspended')audio.resume();
+    if(!audioUnlocked&&audio.state!=='closed'){
+      const b=audio.createBuffer(1,1,22050),s=audio.createBufferSource();
+      s.buffer=b;s.connect(audio.destination);s.start(0);
+      audioUnlocked=true;
+    }
+  }catch(e){}
+}
+['touchstart','pointerdown','mousedown','keydown'].forEach(ev=>addEventListener(ev,unlockAudio,{passive:true,capture:true}));
+let lastTouchEnd=0;
+addEventListener('touchend',e=>{const now=Date.now();if(now-lastTouchEnd<=350&&e.cancelable)e.preventDefault();lastTouchEnd=now},{passive:false});
+['gesturestart','gesturechange','gestureend','dblclick'].forEach(ev=>addEventListener(ev,e=>{if(e.cancelable)e.preventDefault()},{passive:false}));
+function beep(f,d,type,v){if(!sound)return;try{unlockAudio();if(!audio)return;const t0=audio.currentTime,o=audio.createOscillator(),g=audio.createGain();o.type=type||'square';o.frequency.setValueAtTime(f,t0);g.gain.setValueAtTime(v||.08,t0);o.connect(g);g.connect(audio.destination);o.start(t0);g.gain.exponentialRampToValueAtTime(.0001,t0+d);o.stop(t0+d)}catch(e){}}
+const MEL=[523.3,659.3,784,1046.5,784,659.3,587.3,698.5,880,1174.7,880,698.5,493.9,659.3,784,987.8,784,659.3,523.3,587.3,659.3,784,880,784];
+const HAR=[329.6,392,523.3,659.3,523.3,392,349.2,440,587.3,698.5,587.3,440,329.6,392,493.9,659.3,493.9,392,329.6,349.2,392,523.3,587.3,523.3];
 const BAS=[130.8,130.8,146.8,146.8,123.5,123.5,130.8,196];
 let mStep=0,mTimer=null;
-function startMusic(){if(mTimer)return;mTimer=setInterval(()=>{if(!sound||over||!running)return;beep(MEL[mStep%MEL.length],.16,'triangle',.022);if(mStep%3===0)beep(BAS[Math.floor(mStep/3)%BAS.length],.28,'square',.015);mStep++},210)}
+function startMusic(){if(mTimer)return;mTimer=setInterval(()=>{if(!sound||!audio||audio.state!=='running')return;const v=over?.035:.065;beep(MEL[mStep%MEL.length],.17,'square',v);beep(HAR[mStep%HAR.length],.17,'triangle',v*.7);if(mStep%2===0)beep(BAS[Math.floor(mStep/2)%BAS.length],.26,'triangle',v*.95);mStep++},195)}
 startMusic();
-const SFX={step:()=>beep(220,.035,'triangle',.018),frag:()=>{beep(587,.08,'square',.05);setTimeout(()=>beep(880,.12,'square',.05),65)},last:()=>{beep(587,.08);setTimeout(()=>beep(784,.08),70);setTimeout(()=>beep(1046,.18),140)},key:()=>{beep(784,.09);setTimeout(()=>beep(988,.14),80)},portal:()=>{beep(330,.08,'sine',.05);setTimeout(()=>beep(494,.12,'triangle',.05),60)},win:()=>{[523,659,784,1046].forEach((n,i)=>setTimeout(()=>beep(n,.16,'square',.055),i*95))},die:()=>{beep(160,.18,'sawtooth',.06);setTimeout(()=>beep(98,.28,'sawtooth',.06),120)}};
+const SFX={step:()=>beep(260,.04,'triangle',.045),frag:()=>{beep(587,.09,'square',.09);setTimeout(()=>beep(880,.14,'square',.09),65)},last:()=>{beep(587,.09,'square',.09);setTimeout(()=>beep(784,.09,'square',.09),70);setTimeout(()=>beep(1046,.2,'square',.1),140)},key:()=>{beep(784,.1,'square',.09);setTimeout(()=>beep(988,.15,'square',.09),80)},portal:()=>{beep(330,.09,'sine',.08);setTimeout(()=>beep(494,.14,'triangle',.08),60)},win:()=>{[523,659,784,1046].forEach((n,i)=>setTimeout(()=>beep(n,.18,'square',.1),i*95))},die:()=>{beep(160,.2,'sawtooth',.1);setTimeout(()=>beep(98,.3,'sawtooth',.1),120)}};
 
 function showCard(title,text,buttons,tag){
   over=true;running=false;card.classList.remove('hidden');card.innerHTML='';
@@ -123,7 +142,7 @@ function startMission(i){
 }
 function restart(){if(!L)return;S=Logic.newGame(L);dir='right';running=false;hud();hideCard();toast('')}
 function hud(){$('hMission').textContent='Mission '+(idx+1)+'/'+M.length;$('hMem').textContent=S?'Memories '+S.got+'/'+S.total:'Memories —';
- $('bMode').textContent='Mode: '+(mode==='step'?'Step':'Classic');$('bSound').textContent='Sound: '+(sound?'On':'Off')}
+ $('bMode').textContent='Mode: '+(mode==='step'?'Step':'Classic');$('bSound').textContent='Music & SFX: '+(sound?'On':'Off')}
 const WHY={wall:'Pip bumped into a wall.',spike:'Pip touched a corrupted red sector!',self:'Pip tangled up in itself.',dust:'A dust bunny got Pip!',door:'The door is locked. Find the key first.',gate:'The exit stays shut until every memory is collected.'};
 function move(d){
   if(over||!S)return;
@@ -148,7 +167,11 @@ addEventListener('keydown',e=>{
   if(KEYS[e.key]){if(!over){e.preventDefault();move(KEYS[e.key])}}
   else if((e.key==='r'||e.key==='R')&&L&&!over)restart();
 });
-document.querySelectorAll('#pad button').forEach(b=>b.addEventListener('click',()=>move(b.dataset.d)));
+document.querySelectorAll('#pad button').forEach(b=>{
+  let pMoved=false;
+  b.addEventListener('pointerdown',e=>{if(e.pointerType==='touch'||e.pointerType==='pen'){e.preventDefault();unlockAudio();pMoved=true;move(b.dataset.d)}});
+  b.addEventListener('click',e=>{e.preventDefault();unlockAudio();if(pMoved){pMoved=false;return}move(b.dataset.d)});
+});
 let tx=0,ty=0;
 cv.addEventListener('touchstart',e=>{const t=e.changedTouches[0];tx=t.clientX;ty=t.clientY},{passive:true});
 cv.addEventListener('touchend',e=>{const t=e.changedTouches[0],dx=t.clientX-tx,dy=t.clientY-ty;if(Math.max(Math.abs(dx),Math.abs(dy))<24)return;
@@ -207,7 +230,11 @@ function frame(t){
 }
 requestAnimationFrame(frame);
 title();
-if('serviceWorker' in navigator&&location.protocol.startsWith('http'))addEventListener('load',()=>navigator.serviceWorker.register('sw.js').then(r=>r.update()).catch(()=>{}));
+if('serviceWorker' in navigator&&location.protocol.startsWith('http'))addEventListener('load',()=>{
+  navigator.serviceWorker.register('sw.js?v=11',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{});
+  let refreshing=false;
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!refreshing){refreshing=true;location.reload()}});
+});
 window.__game={state:()=>S,move,startMission};
 })();
 </script>
