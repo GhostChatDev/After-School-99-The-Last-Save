@@ -6,7 +6,7 @@
 
   function parse(def) {
     const rows = def.map;
-    const L = { title: def.title, w: rows[0].length, h: rows.length, grid: [], frags: [], portals: {}, bugs: [], start: null, exit: null, def: def };
+    const L = { title: def.title, w: rows[0].length, h: rows.length, grid: [], frags: [], portals: {}, bugs: [], terminals: [], guardianRow: null, start: null, exit: null, def: def };
     rows.forEach(function (row, y) {
       if (row.length !== L.w) throw new Error(def.title + ': row ' + y + ' has the wrong width');
       const cells = [];
@@ -16,6 +16,8 @@
         else if (c === 'h') { L.bugs.push({ x: x, y: y, dx: 1, dy: 0 }); c = '.'; }
         else if (c === 'v') { L.bugs.push({ x: x, y: y, dx: 0, dy: 1 }); c = '.'; }
         else if (c === 'o') L.frags.push([x, y]);
+        else if (c >= 'A' && c <= 'C') L.terminals.push({ id: c, x: x, y: y });
+        else if (c === 'G') { L.guardianRow = y; c = '.'; }
         else if (c === '1' || c === '2') L.portals[c] = [x, y];
         else if (c === 'E') L.exit = [x, y];
         cells.push(c);
@@ -31,7 +33,7 @@
   }
 
   function newGame(L) {
-    return { L: L, body: [L.start.slice()], mask: 0, got: 0, total: L.frags.length, hasKey: false,
+    return { L: L, body: [L.start.slice()], mask: 0, got: 0, total: L.frags.length, hasKey: false, terminalCount: 0,
       bugs: L.bugs.map(function (b) { return { x: b.x, y: b.y, dx: b.dx, dy: b.dy, px: b.x, py: b.y }; }),
       status: 'play', cause: '', events: [], moves: 0 };
   }
@@ -49,7 +51,9 @@
     const c = cell(L, nx, ny);
     if (c === '#') return die('wall');
     if (c === 'D' && !s.hasKey) return die('door');
-    if (c === 'E' && s.got < s.total) return die('gate');
+    if (c === 'E' && (s.got < s.total || s.terminalCount < L.terminals.length)) return die('gate');
+    // A four-move cycle: two warning beats, then a two-beat sweep of the marked row.
+    if (L.guardianRow === ny && s.moves % 4 >= 2) return die('guardian');
     if (c === '1' || c === '2') { const o = L.portals[c === '1' ? '2' : '1']; nx = o[0]; ny = o[1]; n.events.push('portal'); }
     const fi = L.frags.findIndex(function (f) { return f[0] === nx && f[1] === ny; });
     const ate = fi >= 0 && !(s.mask & (1 << fi));
