@@ -36,9 +36,6 @@ button.ghost{background:var(--panel);color:var(--text);border:2px solid var(--bo
 @media (pointer:coarse),(max-width:700px){.pad{display:grid}}
 #toast{min-height:24px;text-align:center;color:var(--muted);font-size:14px}
 #card:has(.picker-grid){justify-content:flex-start;overflow-y:auto}
-.picker-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:min(100%,420px);gap:8px}
-.picker-grid button{min-width:0;padding:8px;font-size:13px}
-button:disabled{opacity:.48;cursor:not-allowed;filter:saturate(.5);box-shadow:none}
 .hidden{display:none!important}
 .help{color:var(--muted);font-size:13px;text-align:center}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -182,7 +179,7 @@ function frame(t){
 }
 requestAnimationFrame(frame);
 title();
-if('serviceWorker' in navigator&&location.protocol.startsWith('http'))addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+if('serviceWorker' in navigator&&location.protocol.startsWith('http'))addEventListener('load',()=>navigator.serviceWorker.register('sw.js').then(r=>r.update()).catch(()=>{}));
 window.__game={state:()=>S,move,startMission};
 })();
 </script>
