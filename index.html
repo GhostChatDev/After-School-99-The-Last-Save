@@ -52,10 +52,22 @@ button.ghost{background:var(--panel);color:var(--text);border:2px solid var(--bo
 }
 #toast{min-height:22px;text-align:center;color:var(--muted);font-size:14px}
 #card:has(.picker-grid){justify-content:flex-start;overflow-y:auto}
-.card.title-screen{background:radial-gradient(circle at 50% 30%,rgba(30,41,84,.96),rgba(8,11,24,.97));gap:10px}
+.card.title-screen{background:linear-gradient(rgba(70,120,255,.18) 1px,transparent 1px) 0 0/32px 32px,linear-gradient(90deg,rgba(70,120,255,.18) 1px,transparent 1px) 0 0/32px 32px,radial-gradient(circle at 50% 35%,#1f4fd6 0%,#0c2a8f 55%,#061550 100%);gap:8px;justify-content:safe center;overflow-y:auto}
 .card.title-screen .bar{align-self:stretch;margin:-20px -20px 4px;padding:4px 10px;display:flex;justify-content:space-between;font:700 12px "Courier New",monospace;color:#fff;background:linear-gradient(90deg,#1c2b8a,#4a63d6);text-align:left}
-.card.title-screen h2{font-size:30px;letter-spacing:3px;color:var(--accent);text-shadow:0 0 12px rgba(255,216,74,.55),3px 3px 0 #000}
-.card.title-screen .row button:first-child{box-shadow:0 3px 0 #a38a1d,0 0 16px rgba(255,216,74,.45)}
+.card.title-screen h2{font:900 clamp(34px,9vw,52px)/1 "Arial Black",Impact,"Trebuchet MS",sans-serif;letter-spacing:2px;text-transform:uppercase;color:#5cff3d;-webkit-text-stroke:2px #0a3d0a;text-shadow:0 2px 0 #c9e600,0 4px 0 #e6c200,0 6px 0 #b88a00,0 8px 0 #6b4b00,0 12px 18px rgba(0,0,0,.6)}
+.card.title-screen .mascot{width:44px;height:44px;border-radius:8px;background:#ffd84a;border:3px solid #fff7b0;position:relative;box-shadow:0 0 18px 4px rgba(255,216,74,.75),0 0 40px rgba(255,216,74,.35);animation:bob 1.6s ease-in-out infinite}
+.card.title-screen .mascot::before,.card.title-screen .mascot::after{content:"";position:absolute;top:12px;width:9px;height:12px;background:#27e8ff;border:2px solid #07333a;border-radius:2px;box-shadow:0 0 8px #27e8ff}
+.card.title-screen .mascot::before{left:7px}.card.title-screen .mascot::after{right:7px}
+@keyframes bob{50%{transform:translateY(-6px) rotate(4deg)}}
+.card.title-screen p{font-size:14px;line-height:1.35}
+.card.title-screen .row{flex-direction:column;align-items:center;width:100%}
+.card.title-screen .row button:first-child{min-height:56px;min-width:min(100%,240px);font-size:20px;color:#06210f;background:linear-gradient(#7dff4f,#2fd11c 55%,#ffd84a 56%);border:3px solid #0a3d0a;border-radius:14px;box-shadow:0 4px 0 #0a3d0a,0 0 22px rgba(92,255,61,.6)}
+.card.title-screen .faces{display:flex;gap:10px;justify-content:center}
+.card.title-screen .faces span{width:34px;height:34px;border-radius:50%;border:3px solid #fff;position:relative;box-shadow:0 0 10px rgba(255,255,255,.4)}
+.card.title-screen .faces span::before{content:"";position:absolute;left:7px;top:9px;width:4px;height:5px;background:#000;box-shadow:12px 0 #000}
+.card.title-screen .faces span::after{content:"";position:absolute;left:8px;width:14px;height:7px;border:3px solid #000;border-top:0;border-radius:0 0 14px 14px;bottom:5px}
+.card.title-screen .faces .e{background:#5cff3d}.card.title-screen .faces .m{background:#ffd84a}.card.title-screen .faces .h{background:#ff6b3d}
+.card.title-screen .faces .h::after{border:3px solid #000;border-bottom:0;border-radius:14px 14px 0 0;bottom:6px}
 .card.title-screen .tag::after{content:"_";animation:blink 1s steps(1) infinite}
 @keyframes blink{50%{opacity:0}}
 .hidden{display:none!important}
@@ -155,6 +167,9 @@ function title(){
   card.classList.add('title-screen');
   const bar=document.createElement('div');bar.className='bar';bar.setAttribute('aria-hidden','true');
   bar.innerHTML='<span>C:\\FAMILY_PC\\LASTSAVE.EXE</span><span>_ □ ×</span>';card.insertBefore(bar,card.firstChild);
+  const mascot=document.createElement('div');mascot.className='mascot';mascot.setAttribute('aria-hidden','true');card.insertBefore(mascot,card.querySelector('h2'));
+  const faces=document.createElement('div');faces.className='faces';faces.setAttribute('aria-hidden','true');faces.innerHTML='<span class="e"></span><span class="m"></span><span class="h"></span>';
+  const row=card.querySelector('.row');if(row)card.insertBefore(faces,row);else card.appendChild(faces);
 }
 function missionPicker(fromGame=true){
   if(fromGame){over=true;running=false;card.classList.remove('hidden');card.innerHTML='';}

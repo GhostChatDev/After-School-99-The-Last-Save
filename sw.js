@@ -1,4 +1,4 @@
-const CACHE = 'after-school-99-chapter-one-v13';
+const CACHE = 'after-school-99-chapter-one-v14';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon.svg', './js/logic.js', './js/missions.js'];
 self.addEventListener('install', event => {
   self.skipWaiting();
