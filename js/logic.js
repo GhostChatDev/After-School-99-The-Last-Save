@@ -59,12 +59,8 @@
     } else if (name === 'echo') {
       if (s.echoRecording) {
         n.echoRecording = false;
-        n.echoActive = false;
         if (s.echoRoute.length) { n.echoGhost = s.body[0].slice(); n.echoCursor = 0; }
-      } else {
-        if (echoAtSwitch(s.L, s.body[0])) { n.echoActive = true; n.events.push('echoOn'); }
-        else { n.echoRecording = true; n.echoRoute = []; n.echoGhost = null; n.echoActive = false; }
-      }
+      } else { n.echoRecording = true; n.echoRoute = []; n.echoGhost = null; n.echoActive = false; }
     } else return s;
     n.events.push(name);
     return n;
@@ -73,44 +69,7 @@
   function blockedForBug(L, x, y) { const c = cell(L, x, y); return '#xDEGA'.includes(c); }
   function echoAtSwitch(L, p) { return L.echoSwitches.some(q => same(p, q)); }
 
-  // Exact original movement rules retained for the twelve published missions.
-  function legacyStep(s, dirName) {
-    if (s.status !== 'play') return s;
-    const L = s.L, d = DIRS[dirName], head = s.body[0];
-    let nx = head[0] + d[0], ny = head[1] + d[1];
-    if (s.body.length > 1 && same(s.body[1], [nx, ny])) return s;
-    const n = Object.assign({}, s, { events: [], moves: s.moves + 1 });
-    const die = cause => { n.status = 'dead'; n.cause = cause; n.events.push('die'); return n; };
-    const c = cell(L, nx, ny);
-    if (c === '#') return die('wall');
-    if (c === 'x') return die('spike');
-    if (c === 'D' && !s.hasKey) return die('door');
-    if (c === 'E' && s.got < s.total) return die('gate');
-    if (c === '1' || c === '2') { const o = L.portals[c === '1' ? '2' : '1']; nx = o[0]; ny = o[1]; }
-    const fi = L.frags.findIndex(f => same(f, [nx, ny]));
-    const ate = fi >= 0 && !(s.mask & (1 << fi));
-    const last = s.body.length - (ate ? 1 : 2);
-    for (let i = 0; i <= last; i++) if (same(s.body[i], [nx, ny])) return die('self');
-    n.body = [[nx, ny]].concat(s.body);
-    if (!ate) n.body.pop();
-    if (ate) { n.mask = s.mask | (1 << fi); n.got = s.got + 1; }
-    if (cell(L, nx, ny) === 'K' && !s.hasKey) n.hasKey = true;
-    if (cell(L, nx, ny) === 'E') { n.status = 'won'; return n; }
-    n.bugs = s.bugs.map(b => {
-      const o = { x: b.x, y: b.y, dx: b.dx, dy: b.dy };
-      let tx = o.x + o.dx, ty = o.y + o.dy;
-      if (blockedForBug(L, tx, ty)) { o.dx = -o.dx; o.dy = -o.dy; tx = o.x + o.dx; ty = o.y + o.dy; }
-      if (blockedForBug(L, tx, ty)) { tx = o.x; ty = o.y; }
-      o.px = b.x; o.py = b.y; o.x = tx; o.y = ty;
-      return o;
-    });
-    for (const b of n.bugs) if ((b.x === nx && b.y === ny) || (b.px === nx && b.py === ny && b.x === head[0] && b.y === head[1])) return die('dust');
-    return n;
-  }
-  function legacyKey(s) { return s.body.map(p => p.join(',')).join(';') + '|' + s.mask + (s.hasKey ? 'k' : '') + '|' + s.bugs.map(b => b.x + ',' + b.y + ',' + b.dx + b.dy).join(';'); }
-
-  function step(s, dirName, legacy) {
-    if (legacy) return legacyStep(s, dirName);
+  function step(s, dirName) {
     if (s.status !== 'play') return s;
     const L = s.L, d = DIRS[dirName];
     if (!d) return s;
@@ -133,7 +92,7 @@
     const fi = L.frags.findIndex(f => same(f, [nx, ny]));
     const ate = fi >= 0 && !(s.mask & (1 << fi));
     // Moving into the departing tail is legal; growth leaves the tail in place.
-    const last = legacy ? s.body.length - (ate ? 0 : 1) : s.body.length - (ate ? 1 : 2);
+    const last = s.body.length - (ate ? 1 : 2);
     for (let i = 0; i <= last; i++) if (same(s.body[i], [nx, ny])) return die('self');
     n.body = [[nx, ny]].concat(s.body);
     if (!ate) n.body.pop();
@@ -147,7 +106,7 @@
       const ed = DIRS[s.echoRoute[s.echoCursor]];
       n.echoGhost = [s.echoGhost[0] + ed[0], s.echoGhost[1] + ed[1]];
       n.echoCursor = s.echoCursor + 1;
-      if (n.echoCursor === n.echoRoute.length && echoAtSwitch(L, n.echoGhost)) { n.echoActive = true; n.events.push('echoOn'); }
+      if (echoAtSwitch(L, n.echoGhost)) { n.echoActive = true; n.events.push('echoOn'); }
     }
     n.brake = Math.max(0, Math.min(100, s.brake + (s.braking ? -12 : 4)));
     if (!n.brake) n.braking = false;
@@ -185,36 +144,31 @@
     const dirs = Object.keys(DIRS);
     if (!options) return dirs;
     const out = dirs.map(d => ({ kind: 'step', value: d }));
-    // Do not explore irrelevant ability toggles in ordinary missions.
-    if (s.L.grid.some(row => row.includes('G')) && s.phase && !s.phaseArmed && ability(s, 'phase') !== s) out.push({ kind: 'ability', value: 'phase' });
-    if (s.L.echoSwitches.length && ability(s, 'echo') !== s) out.push({ kind: 'ability', value: 'echo' });
-    if ((s.L.anchorPads.length || s.L.grid.some(row => row.includes('A'))) && ability(s, 'anchor') !== s) out.push({ kind: 'ability', value: 'anchor' });
+    ['brake','phase','echo','anchor'].forEach(a => { if (ability(s, a) !== s) out.push({ kind: 'ability', value: a }); });
     return out;
   }
 
-  // Campaign validation uses solveActions.
-  function findRoute(L, limit, useAbilities) {
+  // Breadth-first search replays the real actions; this is a validation tool, not gameplay.
+  function solve(L, limit) {
     limit = limit || 400000;
-    const start = newGame(L), stateKey = useAbilities ? key : legacyKey, seen = new Set([stateKey(start)]), queue = [[start, -1, null]];
+    const start = newGame(L), seen = new Set([key(start)]), queue = [[start, -1, null]];
     for (let i = 0; i < queue.length && queue.length < limit; i++) {
       const s = queue[i][0];
-      for (const a of useAbilities ? actions(s, true) : actions(s)) {
-        const t = typeof a === 'string' ? legacyStep(s, a) : a.kind === 'step' ? step(s, a.value, false) : ability(s, a.value);
+      for (const a of actions(s, true)) {
+        const t = a.kind === 'step' ? step(s, a.value) : ability(s, a.value);
         if (t === s || t.status === 'dead') continue;
         if (t.status === 'won') {
           const path = [a];
           for (let j = i; queue[j][1] !== -1; j = queue[j][1]) path.push(queue[j][2]);
           return path.reverse();
         }
-        const k = stateKey(t);
+        const k = key(t);
         if (!seen.has(k)) { seen.add(k); queue.push([t, i, a]); }
       }
     }
     return null;
   }
-  function solve(L, limit) { const path = findRoute(L, limit, false); return path && path.map(a => a.value); }
-  function solveActions(L, limit) { return findRoute(L, limit, true); }
 
-  const api = { DIRS, parse, cell, newGame, step, ability, solve, solveActions, key, actions };
+  const api = { DIRS, parse, cell, newGame, step, ability, solve, key, actions };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Logic = api;
 })(typeof self !== 'undefined' ? self : this);
