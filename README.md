@@ -64,7 +64,7 @@ Run on an Apple M5 Mac (macOS 27.2.1, Node 26). On GitHub the Mission tests chec
 
 **Played in a browser.** Boot screen → story → title → mission 1 won in 26 moves ("PERFECT ROUTE") → mission 16 → walking into a wall shows "SIGNAL LOST" → TRY AGAIN restarts the same mission. No errors in the browser console.
 
-**The screenshot check (Ghost Code's own check: desktop, tablet and phone, pressing every button on the first screen).** Before this version: failed, with the arrows, ☰, ? and A doing nothing. This version, run on the Mac: no failures, **8 of 8 buttons do something**.
+**The screenshot check (Ghost Code's own check: desktop, tablet and phone, pressing every button on the first screen).** Before this version: failed, with the arrows, ☰, ? and A doing nothing. This version, run on the Mac: no failures, **8 of 8 buttons do something**; on GitHub: [passed](https://github.com/GhostChatDev/After-School-99-The-Last-Save/actions/runs/45173048768).
 
 **Not tested yet:** sound and offline play on a real phone; a person playing every mission start to finish (each is proved winnable by the search, not by hand).
 
