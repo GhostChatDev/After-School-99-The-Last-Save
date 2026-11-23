@@ -4,7 +4,7 @@ A Snake-style nostalgia adventure: 12 short missions and an ending. Pip is a glo
 
 ## Run
 
-Keep `index.html`, `sw.js`, `manifest.webmanifest`, `icon.svg` and the `js/` folder together. Run `python3 -m http.server 8000` and open `http://localhost:8000/`. Controls: arrow keys or WASD, swipe, or the on-screen arrows. Progress is saved in the browser on this device.
+Keep `index.html`, `sw.js`, `manifest.webmanifest`, `icon.svg` and the `js/` folder together. Run `python3 -m http.server 8000` and open `http://localhost:8000/`. Controls: arrow keys or WASD, swipe, or the on-screen arrows. On the title screen, arrows move the highlight and A (or Enter) activates the highlighted item. `?` opens How to Play; Escape or `M` opens the menu; the `☰` button opens the menu on every screen. Progress is saved in the browser on this device.
 
 ## Tests
 
