@@ -61,8 +61,8 @@ button.ghost{background:var(--panel);color:var(--text);border:2px solid var(--bo
 <main class="shell">
   <div id="game" class="hidden">
     <div class="hud" style="margin-bottom:10px">
-      <span id="hMission">Mission 1/12</span><span id="hMem">Memories 0/0</span>
-      <span class="row"><button class="ghost" id="bRestart" aria-label="Restart mission">Restart</button><button class="ghost" id="bMode">Mode: Step</button><button class="ghost" id="bCtrl" title="Switch thumb controller layout">Controls: Split</button><button class="ghost" id="bSound">Music &amp; SFX: On</button><button class="ghost" id="bPicker">Missions</button><button class="ghost" id="bMenu">Menu</button></span>
+      <span id="hMission">Mission 1/24</span><span id="hMem">Memories 0/0</span>
+      <span class="row"><button class="ghost" id="bBrake">Brake: Off (B)</button><button class="ghost" id="bPhase">Phase: Ready (F)</button><button class="ghost" id="bEcho">Echo: Record (R)</button><button class="ghost" id="bAnchor">Anchor (Z)</button><button class="ghost" id="bPause">Pause (Esc)</button><button class="ghost" id="bRestart" aria-label="Restart mission">Restart</button><button class="ghost" id="bMode">Mode: Step</button><button class="ghost" id="bCtrl" title="Switch thumb controller layout">Controls: Split</button><button class="ghost" id="bSound">Music &amp; SFX: On</button><button class="ghost" id="bPicker">Missions</button><button class="ghost" id="bMenu">Menu</button></span>
     </div>
   </div>
   <div class="stage" id="stage">
@@ -90,6 +90,7 @@ button.ghost{background:var(--panel);color:var(--text);border:2px solid var(--bo
   <p class="help">Left/Right thumb corners, swipe on board, or Arrow keys / WASD. Tap “Controls” to switch Split / Left / Right.</p>
 </main>
 <script src="js/logic.js"></script>
+<script src="js/campaign.js"></script>
 <script src="js/missions.js"></script>
 <script>
 (function(){
@@ -168,7 +169,7 @@ function startMission(i){
   idx=i;L=Logic.parse(M[i]);S=Logic.newGame(L);dir='right';
   cv.width=L.w*CELL;cv.height=L.h*CELL;
   $('game').classList.remove('hidden');$('pad').classList.remove('hidden');
-  save.mission=Math.max(0,i);store();hud();toast('');
+  store();hud();toast('');
   showCard('Mission '+(i+1)+': '+M[i].title,M[i].intro,[['Play',()=>{hideCard();toast(mode==='step'?'Step mode: Pip moves when you do.':'Classic mode: Pip keeps moving.')}]]);
 }
 function restart(){if(!L)return;S=Logic.newGame(L);dir='right';running=false;hud();hideCard();toast('')}
@@ -180,20 +181,31 @@ function applyCtrl(){
   $('padCross').classList.toggle('hidden',isSplit);
 }
 function hud(){$('hMission').textContent='Mission '+(idx+1)+'/'+M.length;$('hMem').textContent=S?'Memories '+S.got+'/'+S.total:'Memories —';
- $('bMode').textContent='Mode: '+(mode==='step'?'Step':'Classic');$('bCtrl').textContent='Controls: '+CTRL_NAMES[ctrl];$('bSound').textContent='Music & SFX: '+(sound?'On':'Off');applyCtrl()}
+ $('bMode').textContent='Mode: '+(mode==='step'?'Step':'Classic');$('bCtrl').textContent='Controls: '+CTRL_NAMES[ctrl];$('bSound').textContent='Music & SFX: '+(sound?'On':'Off');
+ $('bBrake').textContent='Brake: '+(S&&S.braking?'On':'Off')+' (B)';$('bPhase').textContent='Phase: '+(S&&S.phaseArmed?'Armed':S&&S.phase?'Ready':'Used')+' (F)';$('bEcho').textContent='Echo: '+(S&&S.echoRecording?'Recording':'Record/Release')+' (R)';$('bAnchor').textContent=S&&S.anchor?'Release Anchor (Z)':'Anchor (Z)';applyCtrl()}
 const WHY={wall:'Pip bumped into a wall.',spike:'Pip touched a corrupted red sector!',self:'Pip tangled up in itself.',dust:'A dust bunny got Pip!',door:'The door is locked. Find the key first.',gate:'The exit stays shut until every memory is collected.'};
 function move(d){
   if(over||!S)return;
   if(mode==='classic'){const o={up:'down',down:'up',left:'right',right:'left'};if(S.body.length>1&&o[d]===dir)return;dir=d;running=true;return}
   dir=d;running=true;tick();
 }
+function useAbility(name){
+  if(over||!S)return;
+  const n=Logic.ability(S,name);if(n===S){toast(name==='anchor'?'Stand on an anchor pad (a) first.':'That ability is not ready.');return}
+  S=n;hud();beep(name==='echo'?660:440,.09,'triangle',.06);
+  if(name==='brake')toast(S.braking?'Brake on: classic movement slows.':'Brake off.');
+  else if(name==='phase')toast(S.phaseArmed?'Phase armed for the next glowing gate.':'Phase disarmed.');
+  else if(name==='echo')toast(S.echoRecording?'Recording your route. Press R to release Echo.':'Echo released.');
+  else toast(S.anchor?'Anchored. Press Z to release.':'Anchor released.');
+}
+function pause(){if(!L||over||S.status!=='play')return;running=false;showCard('Paused','The computer will wait. No moves happen while paused.',[['Resume',()=>{hideCard();toast('Choose a direction to continue.')}],['Restart',restart,1],['Menu',title,1]])}
 function tick(){
   const n=Logic.step(S,dir);if(n===S)return;S=n;
   if(!n.events.length)SFX.step();
   n.events.forEach(e=>{if(SFX[e])SFX[e]()});hud();
   if(S.status==='dead'){running=false;toast(WHY[S.cause]||'Oops!');
     setTimeout(()=>showCard('Oops!',WHY[S.cause]||'Try again.',[['Try again',restart]]),350)}
-  else if(S.status==='won'){running=false;save.mission=idx+1<M.length?idx+1:0;if(idx+1>=M.length)save.finished=true;store();
+  else if(S.status==='won'){running=false;save.mission=Math.min(M.length-1,Math.max(save.mission,idx+1));if(idx+1>=M.length)save.finished=true;store();
     setTimeout(()=>{
       if(idx+1<M.length)showCard('Memory saved!',M[idx].outro,[['Next mission',()=>startMission(idx+1)],['Menu',title,1]]);
       else showCard('The End',M[idx].outro.split('\n').concat(END),[['Play again',()=>{save.mission=0;store();startMission(0)}],['Menu',title,1]],'“Some things are worth saving twice.”');
@@ -203,7 +215,11 @@ const KEYS={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:
 addEventListener('keydown',e=>{
   if(e.metaKey||e.ctrlKey||e.altKey)return;
   if(KEYS[e.key]){if(!over){e.preventDefault();move(KEYS[e.key])}}
-  else if((e.key==='r'||e.key==='R')&&L&&!over)restart();
+  else if(!over&&(e.key==='b'||e.key==='B'))useAbility('brake');
+  else if(!over&&(e.key==='f'||e.key==='F'))useAbility('phase');
+  else if(!over&&(e.key==='r'||e.key==='R'))useAbility('echo');
+  else if(!over&&(e.key==='z'||e.key==='Z'))useAbility('anchor');
+  else if(e.key==='Escape'){e.preventDefault();pause();}
 });
 document.querySelectorAll('#pad button').forEach(b=>{
   let pMoved=false;
@@ -215,6 +231,13 @@ cv.addEventListener('touchstart',e=>{const t=e.changedTouches[0];tx=t.clientX;ty
 cv.addEventListener('touchend',e=>{const t=e.changedTouches[0],dx=t.clientX-tx,dy=t.clientY-ty;if(Math.max(Math.abs(dx),Math.abs(dy))<24)return;
   move(Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up'))},{passive:true});
 $('bRestart').onclick=restart;
+$('bPause').onclick=pause;
+$('bBrake').onclick=()=>useAbility('brake');
+$('bPhase').onclick=()=>useAbility('phase');
+$('bEcho').onclick=()=>useAbility('echo');
+$('bAnchor').onclick=()=>useAbility('anchor');
+addEventListener('blur',pause);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)pause()});
 $('bPicker').onclick=()=>missionPicker(true);
 $('bMenu').onclick=title;
 $('bMode').onclick=()=>{mode=mode==='step'?'classic':'step';running=false;store();hud();toast(mode==='step'?'Step mode: Pip moves when you do.':'Classic mode: Pip keeps moving. Choose a direction to start.')};
@@ -245,7 +268,7 @@ function draw(t){
     }
     else if(c==='D'){ctx.fillStyle=S.hasKey?'rgba(255,216,74,.22)':'#b5651d';ctx.fillRect(px+5,py+4,CELL-10,CELL-8);ctx.strokeStyle='#ffd84a';ctx.lineWidth=2;ctx.strokeRect(px+6,py+5,CELL-12,CELL-10);if(!S.hasKey){ctx.fillStyle='#ffd84a';ctx.fillRect(px+CELL/2-4,py+CELL/2-4,8,8)}}
     else if(c==='K'&&!S.hasKey){ctx.fillStyle='#ffd84a';ctx.beginPath();ctx.arc(px+14,py+CELL/2,8*pulse,0,7);ctx.fill();ctx.fillRect(px+18,py+CELL/2-3,16,6);ctx.fillRect(px+28,py+CELL/2,4,10)}
-    else if(c==='E'){const open=S.got>=S.total;ctx.fillStyle=open?'#4dffb5':'#4a2438';ctx.fillRect(px+3,py+3,CELL-6,CELL-6);ctx.strokeStyle=open?'#fff7b0':'#ff6b81';ctx.lineWidth=2;ctx.strokeRect(px+4,py+4,CELL-8,CELL-8);ctx.fillStyle=open?'#0a0f20':'#ff9ebb';ctx.font='bold 14px "Courier New",monospace';ctx.textAlign='center';ctx.fillText(open?'SAVE':'LOCK',px+CELL/2,py+CELL/2+5);ctx.textAlign='start'}
+    else if(c==='E'){const open=S.got>=S.total&&(!L.echoSwitches.length||S.echoActive);ctx.fillStyle=open?'#4dffb5':'#4a2438';ctx.fillRect(px+3,py+3,CELL-6,CELL-6);ctx.strokeStyle=open?'#fff7b0':'#ff6b81';ctx.lineWidth=2;ctx.strokeRect(px+4,py+4,CELL-8,CELL-8);ctx.fillStyle=open?'#0a0f20':'#ff9ebb';ctx.font='bold 14px "Courier New",monospace';ctx.textAlign='center';ctx.fillText(open?'SAVE':'LOCK',px+CELL/2,py+CELL/2+5);ctx.textAlign='start'}
     else if(c==='1'||c==='2'){ctx.strokeStyle=c==='1'?'#ff9bf0':'#7ad8ff';ctx.lineWidth=3.5;ctx.beginPath();ctx.arc(px+CELL/2,py+CELL/2,13*pulse,0,7);ctx.stroke();ctx.beginPath();ctx.arc(px+CELL/2,py+CELL/2,6/pulse,0,7);ctx.stroke()}
   }
   L.frags.forEach((f,i)=>{if(S.mask&(1<<i))return;const cx=f[0]*CELL+CELL/2,cy=f[1]*CELL+CELL/2;
@@ -264,7 +287,7 @@ function draw(t){
   if(S.status==='dead'){ctx.fillStyle='rgba(255,107,129,.28)';ctx.fillRect(0,0,w,h)}
 }
 function frame(t){
-  if(running&&!over&&mode==='classic'){acc+=t-last;while(acc>=230&&running&&!over){acc-=230;tick()}}else acc=0;
+  if(running&&!over&&mode==='classic'){acc+=t-last;const delay=S&&S.braking?420:230;while(acc>=delay&&running&&!over){acc-=delay;tick()}}else acc=0;
   last=t;draw(t);requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
