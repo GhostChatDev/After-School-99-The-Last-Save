@@ -62,9 +62,10 @@ button.ghost{background:var(--panel);color:var(--text);border:2px solid var(--bo
   <div id="game" class="hidden">
     <div class="hud" style="margin-bottom:10px">
       <span id="hMission">Mission 1/12</span><span id="hMem">Memories 0/0</span>
-      <span class="row"><button class="ghost" id="bRestart" aria-label="Restart mission">Restart</button><button class="ghost" id="bMode">Mode: Step</button><button class="ghost" id="bCtrl" title="Switch thumb controller layout">Controls: Split</button><button class="ghost" id="bSound">Music &amp; SFX: On</button><button class="ghost" id="bPicker">Missions</button><button class="ghost" id="bMenu">Menu</button></span>
+      <span class="row"><button class="ghost" id="bRestart" aria-label="Restart mission">Restart</button><button class="ghost" id="bMode">Mode: Step</button><button class="ghost" id="bCtrl" title="Switch thumb controller layout">Controls: Split</button><button class="ghost" id="bSound">Music &amp; SFX: On</button><button class="ghost" id="bPicker">Missions</button></span>
     </div>
   </div>
+  <button class="ghost menu-toggle" id="bMenu" aria-label="Open menu" aria-keyshortcuts="m">☰ Menu</button>
   <div class="stage" id="stage">
     <canvas id="cv" width="440" height="360" aria-label="Game board"></canvas>
     <div class="card" id="card"></div>
@@ -150,7 +151,11 @@ function selectAction(delta=0){
   actions[selectedAction].focus({preventScroll:true});
 }
 function menuAction(){
-  if(over){eActivate();return}
+  if(over){
+    if(card.dataset.screen==='menu'){title();return}
+    showCard('Menu',['Choose a destination or return to the current screen.'],[['Back',title],['How to Play',howToPlay,1],['Restart mission',()=>startMission(save.mission),1]],'☰ Menu');
+    card.dataset.screen='menu';return;
+  }
   if(L)missionPicker(true);
   else title();
 }
