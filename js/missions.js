@@ -139,7 +139,7 @@
             '#..h....vE..#',
             '#############'],
       outro: 'The line connects. Somewhere, a whole world is waiting to load.' },
-    { title: 'Shutdown Warning', intro: '"It is now safe to turn off your computer." Not yet. A glitch guards the last folder of Act II.',
+    { title: 'Shutdown Warning', intro: '"It is now safe to turn off your computer." Not yet. A glitch guards the last folder before midnight.',
       map: ['#############',
             '#P.x#...K.x.#',
             '#.o.#.h.....#',
