@@ -78,7 +78,23 @@ Run on an Apple M5 Mac (macOS 27.2.1, Node 26). On GitHub the Mission tests chec
 | Checks on GitHub | $0 | public repository: GitHub Actions minutes are free |
 | Hosting | $0 | GitHub Pages |
 
-All check runs on this repository so far (most of them Ghost Code's own, while it built and fixed levels): Mission tests 86 runs, 72 passed and 14 failed; screenshot check 85 runs, 73 passed and 11 failed.
+**Every pass and fail on GitHub** (317 check runs, 281 passed, 30 failed, 4 cancelled; full list with links and reasons in [docs/CHECK-HISTORY.md](docs/CHECK-HISTORY.md)):
+
+| Check | Runs | Passed | Failed |
+|---|---|---|---|
+| Ghost Pages | 65 | 64 | 0 |
+| Ghost Screenshots | 90 | 79 | 11 |
+| Mission tests | 96 | 77 | 19 |
+| pages build and deployment | 64 | 61 | 0 |
+
+Why the 30 failures happened (most while Ghost Code was building; the latest version passes every check):
+
+- The test file couldn't load the game's levels: 2
+- The test file stopped before any test could report: 4
+- A mission couldn't be won (no route to the exit): 9
+- The game and its test disagreed on the number of missions: 4
+- The page crashed when it opened: 8
+- Buttons did nothing when pressed: 3
 
 ## What it isn't yet
 The brief asked for a four-hour campaign and four abilities. What's here is sixteen missions (well under an hour for most players) and one movement mode. Offline play is set up but not yet tried on a real phone.
