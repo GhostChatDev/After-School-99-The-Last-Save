@@ -1,52 +1,31 @@
-/* Later campaign missions: 20x20 deterministic grids. */
+/* Six archive sectors, two new missions per chapter. Original 12 remain in missions.js. */
 (function (root) {
   'use strict';
-  const map = [
-    '#P.....#..............#',
-    '#......#...o..........#',
-    '#..#...#....#########.#',
-    '#..#...#..............#',
-    '#..#...........h......#',
-    '#..#...#..............#',
-    '#..#...#########......#',
-    '#..#...#..............#',
-    '#......#...x..........#',
-    '####D###...x..........#',
-    '#......#...#..........#',
-    '#..o...#...#..........#',
-    '#......#...#...o......#',
-    '#......#...#..........#',
-    '#......#...#..........#',
-    '#......#...#..........#',
-    '#......#...#..........#',
-    '#......#...#..........#',
-    '#..K...#...#.........E#',
-    '#######################'
+  const missions = [
+    { title: 'Two Chairs', chapter: 2, ability: 'brake', intro: 'June wrote the movement code. You drew Pip. Press B to toggle Brake; it trades energy for careful planning.',
+      map: ['#########','#P.o....#','#.###...#','#o....o.#','#...###.#','#......E#','#########'], outro: 'June: “You always made the hard levels for me.”' },
+    { title: 'The Unsent Message', chapter: 2, ability: 'phase', intro: 'Press Q to arm Phase. Its one charge carries you through one blue gate; a spark recharges it.',
+      map: ['#########','#P..G.o.#','#.###...#','#o......#','#...###.#','#......E#','#########'], outro: 'A message draft ends before either sibling says goodbye.' },
+    { title: 'A Friend For Pip', chapter: 3, ability: 'echo', intro: 'Press E to start Echo, move in a loop over the switch, then press E again to replay it.',
+      map: ['#########','#Pso....#','#.###...#','#o......#','#...###.#','#......E#','#########'], outro: '“Give him a friend so he doesn’t get lonely.”' },
+    { title: 'The Long Way Home', chapter: 3, ability: 'anchor', intro: 'Stand on an anchor pad and press Space. Anchor holds that point and opens A doors.',
+      map: ['#########','#Pa.A.o.#','#.###...#','#o......#','#...###.#','#......E#','#########'], outro: 'Home was not one address. It was who waited there.' },
+    { title: 'Version Twelve', chapter: 4, ability: 'phase', intro: 'Blue gates are marked G. Arm Phase before entering; a wrong approach still costs a life.',
+      map: ['#########','#P.o..G.#','#.#.###.#','#o......#','#.###...#','#o.....E#','#########'], outro: 'Twelve versions. None of them were really final.' },
+    { title: 'Rain On The Window', chapter: 4, ability: 'brake', intro: 'Dust bunnies move every turn, even in Step mode. Brake is a planning tool, not invincibility.',
+      map: ['#########','#P.o....#','#...h...#','#.###.#.#','#o......#','#......E#','#########'], outro: 'Rain on glass, two chairs pulled close to the monitor.' },
+    { title: 'The Transfer Window', chapter: 5, ability: 'echo', intro: 'A recorded Echo repeats your route after recording stops. Close the loop across the switch.',
+      map: ['#########','#Ps.....#','#.#.###.#','#o......#','#...#...#','#o.....E#','#########'], outro: 'Dot finds a route to a modern disk. There is time for one attempt.' },
+    { title: 'Before The Shutdown', chapter: 5, ability: 'anchor', intro: 'Anchor on the pad, then cross the A door. Space again releases it.',
+      map: ['#########','#PaA....#','#.#.###.#','#o......#','#...#...#','#o.....E#','#########'], outro: 'Null: “Preservation is not the same as never changing.”' },
+    { title: 'A Shared Screen', chapter: 6, ability: 'phase', intro: 'The last sectors combine what you learned. Collect every memory before saving.',
+      map: ['#########','#P.o.G..#','#.##....#','#o..x...#','#....##.#','#o.....E#','#########'], outro: 'The final level loads: two names in the corner, yours and June’s.' },
+    { title: 'Really Final', chapter: 6, ability: 'echo', intro: 'The archive is collapsing, but a route remains. Use Echo to release the exit.',
+      map: ['#########','#Ps.....#','#.##....#','#o..x...#','#....##.#','#o.....E#','#########'], outro: 'The unfinished level was never a failure. It was a place you shared.' },
+    { title: 'A New Save', chapter: 6, ability: 'anchor', intro: 'One anchored point can open the way forward without holding the rest of the world still.',
+      map: ['#########','#PaA....#','#.##....#','#o..x...#','#....##.#','#o.....E#','#########'], outro: 'Pip steps onto a new disk. The old room does not disappear.' },
+    { title: 'After School', chapter: 6, ability: 'phase', intro: 'Make the last save—not to live in 1999, but to carry what mattered out with you.',
+      map: ['#########','#P.o.G..#','#...#...#','#o..h...#','#...#...#','#o.....E#','#########'], outro: 'Alex calls June. “I found our game. Want to finish it together?”' }
   ];
-  // All authored missions use the same tile grammar. Routes are validated by
-  // the shared state machine, not by decorative reachability alone.
-  const later = [
-    { title: 'A Route Through Blue', chapter: 2, intro: 'The next sector opens with a long route. Take the key, gather the memories, and keep your turns deliberate.', map: map, outro: 'A blue folder remembers the sound of two children laughing.' },
-    { title: 'The Long Way Home', chapter: 2, intro: 'Shortcuts are not always kinder. Collect the sparks and read the dust patrol before crossing.', map: map, outro: 'June left a note in the margin: “We can try again tomorrow.”' },
-    { title: 'The Homework Backup', chapter: 2, intro: 'An unfinished drawing is still worth saving. The exit waits beyond the familiar blue folders.', map: map, outro: 'A homework page carries a tiny drawing of Pip and a friend.' },
-    { title: 'Two Chairs', chapter: 2, intro: 'There were always two chairs at this desk. Keep moving, but do not rush the last turn.', map: map, outro: 'For a moment, both chairs are occupied again.' },
-    { title: 'Summer Route', chapter: 3, intro: 'The summer archive is warm with old afternoons. Recover the key and bring every memory home.', map: map, outro: 'A saved drawing shows a bicycle outside the house.' },
-    { title: 'Rain On The Window', chapter: 3, intro: 'Rain loops behind the folders. The patrols are predictable; your route can be too.', map: map, outro: 'Alex remembers June waiting at the window.' },
-    { title: 'A Shared Screen', chapter: 3, intro: 'One screen, two ideas, and no save button yet. Find the route through the archive.', map: map, outro: 'The old project has two authors again.' },
-    { title: 'The Last Bell', chapter: 3, intro: 'The final bell of summer is stored here. Do not leave a memory behind.', map: map, outro: 'The school bell becomes a quiet electronic chime.' },
-    { title: 'Archive Sector Four', chapter: 4, intro: 'The older backups are fragile but readable. Follow the key through the folder walls.', map: map, outro: 'A voice clip survives: “It does not have to be perfect.”' },
-    { title: 'Version Twelve', chapter: 4, intro: 'Another version, another chance. The memories are intact if you reach them carefully.', map: map, outro: 'The version history is a record of trying, not failing.' },
-    { title: 'The Unsent Message', chapter: 4, intro: 'A message to June was never sent. Carry its memories to the exit.', map: map, outro: 'The message reads: “Do you want to finish our game?”' },
-    { title: 'Before The Shutdown', chapter: 4, intro: 'Null warns that cleanup is near. Save this sector before the final transfer.', map: map, outro: 'Null is not an enemy. It is trying to keep something alive.' },
-    { title: 'Really Final', chapter: 5, intro: 'The last folder contains the first unfinished level. Bring its pieces back together.', map: map, outro: 'The original Pip drawing appears beside June’s movement code.' },
-    { title: 'What We Made', chapter: 5, intro: 'There is no perfect version waiting here. There is only the one you can save.', map: map, outro: 'The archive stops asking to be restored and starts asking to be shared.' },
-    { title: 'A Friend For Pip', chapter: 5, intro: 'The note was right: Pip was never meant to make this journey alone.', map: map, outro: 'Dot stays with Pip as the transfer window opens.' },
-    { title: 'The Transfer Window', chapter: 5, intro: 'The Overwrite is close. One last careful route can carry the whole archive out.', map: map, outro: 'The final sector is ready for a new machine.' },
-    { title: 'The Last Save', chapter: 6, intro: 'Save what you can. Keep moving. The game does not need to be perfect to be finished.', map: map, outro: 'Pip reaches the final flag with the archive intact.' },
-    { title: 'After School', chapter: 6, intro: 'There is still time to play together. Reach the flag and make a new save.', map: map, outro: 'Alex calls June. For the first time in years, they talk about the game.' },
-    { title: 'Really, Really Final', chapter: 6, intro: 'The old folder name was never an ending. Bring the last memories home.', map: map, outro: 'A new file appears beside the old one: AFTER_SCHOOL_TOGETHER.' },
-    { title: 'A New Save', chapter: 6, intro: 'The transfer is complete. One final route remains, and you can take it at your own pace.', map: map, outro: 'Some things are worth saving twice. Some are worth starting again.' }
-  ];
-  if (typeof module !== 'undefined' && module.exports) module.exports = later;
-  else root.LaterMissions = later;
+  if (typeof module !== 'undefined' && module.exports) module.exports = missions; else root.Campaign = missions;
 })(typeof window !== 'undefined' ? window : globalThis);
