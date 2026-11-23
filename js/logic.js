@@ -147,7 +147,7 @@
       const ed = DIRS[s.echoRoute[s.echoCursor]];
       n.echoGhost = [s.echoGhost[0] + ed[0], s.echoGhost[1] + ed[1]];
       n.echoCursor = s.echoCursor + 1;
-      if (n.echoCursor === n.echoRoute.length && echoAtSwitch(L, n.echoGhost)) { n.echoActive = true; n.events.push('echoOn'); }
+      if (echoAtSwitch(L, n.echoGhost)) { n.echoActive = true; n.events.push('echoOn'); }
     }
     n.brake = Math.max(0, Math.min(100, s.brake + (s.braking ? -12 : 4)));
     if (!n.brake) n.braking = false;
@@ -212,7 +212,7 @@
     }
     return null;
   }
-  function solve(L, limit) { const path = findRoute(L, limit, false); return path && path.map(a => a.value); }
+  function solve(L, limit) { return findRoute(L, limit, false); }
   function solveActions(L, limit) { return findRoute(L, limit, true); }
 
   const api = { DIRS, parse, cell, newGame, step, ability, solve, solveActions, key, actions };
