@@ -233,7 +233,7 @@ function control(action){
     if(action==='help')howToPlay();
     else if(action==='menu')menuAction();
     else if(action==='activate')eActivate();
-    else move(action);
+    else if(['up','down','left','right'].includes(action))selectAction(action==='left'||action==='up'?-1:1);
   }else if(action==='menu')menuAction();
   else if(['up','down','left','right'].includes(action))move(action);
 }
