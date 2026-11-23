@@ -1,8 +1,26 @@
-/* Story and mission maps. Legend: # wall, x corrupt sector spike, . floor, P start, o memory, K key, D door, E exit, 1 2 portals, h v dust bunnies. */
+/* Story and mission maps. Legend: # wall, x corrupt sector, . floor, P start, o memory spark, K key, D door, E exit,
+   1 2 portals, h v dust bunnies, g glitch (hunts Pip), r virus (crawls along walls). See js/logic.js for the rules.
+   Story, names and levels are original. Every mission is proved winnable by tests/missions.test.cjs. */
 (function (root) {
   'use strict';
+
+  // The one screen of story before the first mission.
+  const opening = [
+    'NOV 23, 1999. 11:02 PM.',
+    'Tomorrow the family computer goes to the dump.',
+    'Inside it, Pip wakes up: the screensaver ribbon nobody ever switched off.',
+    'At midnight the hard drive is wiped. Pip has one floppy disk left.',
+    'Collect every memory spark. Find the way out. Save what matters.'
+  ];
+
+  const acts = [
+    { from: 0, title: 'ACT I: BOOT', line: 'The old machine hums awake.' },
+    { from: 4, title: 'ACT II: THE FOLDERS', line: 'Deeper in, the memories get bigger, and so does Pip.' },
+    { from: 8, title: 'ACT III: THE GLITCH', line: 'Something is eating the files.' }
+  ];
+
   const missions = [
-    { title: 'Boot Sector', intro: 'The old family computer wakes up. Corrupt sectors (x) and dust bunnies patrol the grid! Collect every memory spark, then thread the needle to the exit.',
+    { title: 'Boot Sector', intro: 'The old family computer wakes up. Corrupt sectors (x) and dust bunnies patrol the grid. Collect every memory spark, then thread the needle to the exit.',
       map: ['###########',
             '#P..x....o#',
             '#.x.#.x.#.#',
@@ -35,7 +53,7 @@
             '#.o...#..oE',
             '###########'],
       outro: 'Inside: a drawing of a treehouse, and a promise to keep it forever.' },
-    { title: 'Dust Bunnies', intro: 'A gauntlet of dust bunnies and corrupt sectors patrols the files. Watch their pattern carefully, then slip past.',
+    { title: 'Dust Bunnies', intro: 'A gauntlet of dust bunnies and corrupt sectors patrols the files. Watch their pattern, then slip past.',
       map: ['###########',
             '#P..x.....#',
             '#.x....h..#',
@@ -57,7 +75,7 @@
             '#2...x...E#',
             '###########'],
       outro: 'A floppy disk labelled "SUMMER". It is still warm.' },
-    { title: 'Birthday Video', intro: 'A video file guarded by twin dust bunnies, corrupt sectors, and a locked door.',
+    { title: 'Birthday Video', intro: 'A video file guarded by twin dust bunnies, corrupt sectors and a locked door.',
       map: ['###########',
             '#P...#....#',
             '#.o..#..o.#',
@@ -67,7 +85,7 @@
             '#.o...o..E#',
             '###########'],
       outro: 'Candles, a wobbly camera, and a laugh you had almost forgotten.' },
-    { title: 'The Attic Drive', intro: 'The biggest folder yet, riddled with corrupt sectors and dust bunnies. Plan your path: you will be long by the end.',
+    { title: 'The Attic Drive', intro: 'The biggest folder yet. Plan your path: you will be long by the end.',
       map: ['#############',
             '#P....#..h..#',
             '#.##.o#..o..#',
@@ -87,41 +105,41 @@
             '#K.o.######E#',
             '#############'],
       outro: 'Chalk on the pavement, a skipping rope, and someone shouting your name to come back.' },
-    { title: 'Cassette Loop', intro: 'A mixtape on repeat. Dodge the corrupt tape sectors and dust bunnies through the portal loop.',
+    { title: 'Cassette Loop', intro: 'Something new is on the tape: a GLITCH, a knot of red static. Every second step it moves toward you. It cannot cross your tail, so use your body as a wall.',
       map: ['#############',
             '#P..#...h...#',
             '#.o.#..o....#',
             '#...1.#####.#',
-            '#.###.#...#.#',
+            '#.###.#g..#.#',
             '#..h..#.o.#.#',
             '#2#####.....#',
             '#o.........E#',
             '#############'],
-      outro: 'Side B. The tape hisses, then your favourite song starts.' },
-    { title: 'Chat Room', intro: 'Someone is typing... A locked room, corrupt packets, a key hidden in the corridor, and dust bunnies on patrol.',
+      outro: 'Side B. The tape hisses, then your favourite song starts. The glitch flickers, and for a second it sounds like it is humming along.' },
+    { title: 'Chat Room', intro: 'Someone is typing... A locked room, corrupt packets, a key in the corridor, and a glitch waiting by the last spark.',
       map: ['#############',
             '#P....#....o#',
             '#..h..#.....#',
             '#.o...D..v..#',
             '#.....#.....#',
             '#.###.#####.#',
-            '#.#K..#o..#.#',
+            '#.#K..#og.#.#',
             '#.#.###.#.#.#',
             '#...o...#..E#',
             '#############'],
-      outro: 'Old friends\u2019 names scroll past. "brb" - and then they never did, but you remember them anyway.' },
-    { title: 'Dial-Up', intro: 'Beep, screech, hiss. Three dust bunnies, corrupt sectors, and a portal pair stand between you and the connection.',
+      outro: 'Old friends’ names scroll past. "brb", and then they never were, but you remember them anyway.' },
+    { title: 'Dial-Up', intro: 'Beep, screech, hiss. Three dust bunnies, a portal pair and a glitch stand between you and the connection.',
       map: ['#############',
             '#P.h..x..o..#',
             '#.x...#..h..#',
             '#.o...#..#..#',
             '#..x..1..#..#',
             '#.#####..#o.#',
-            '#.o..x.2.#..#',
+            '#.o.gx.2.#..#',
             '#..h....vE..#',
             '#############'],
       outro: 'The line connects. Somewhere, a whole world is waiting to load.' },
-    { title: 'The Last Save', intro: 'The ultimate 1999 gauntlet. Gather every last memory through the corrupt sectors and dust patrols.',
+    { title: 'Shutdown Warning', intro: '"It is now safe to turn off your computer." Not yet. A glitch guards the last folder of Act II.',
       map: ['#############',
             '#P.x#...K.x.#',
             '#.o.#.h.....#',
@@ -130,14 +148,71 @@
             '#.#.#.#.#.#.#',
             '#.#.x.#..h..#',
             '#.#####1#.o.#',
-            '#o..2..x..#E#',
+            '#og.2..x..#E#',
             '#############'],
-      outro: 'Pip saves the memory twice: once on the disk, and once in you.' }
+      outro: 'The clock in the corner says 11:41. The glitches are multiplying.' },
+    { title: 'Y2K Countdown', intro: 'Nineteen minutes to midnight. The biggest glitch yet waits at the bottom of the screen. Collect the sparks before it reaches you.',
+      map: ['###############',
+            '#P....#.....o.#',
+            '#.o.x.#.###...#',
+            '#.....#...#.x.#',
+            '#.###.###.#...#',
+            '#...o.....#.o.#',
+            '#.x.##.##.#...#',
+            '#..o.....g...E#',
+            '###############'],
+      outro: 'A New Year’s party, 1998. Everyone counts down. Nobody looks at the camera.' },
+    { title: 'Recycle Bin', intro: 'Deleted files, not quite gone. A VIRUS crawls along the walls here: it always keeps a wall on its left. Learn its loop.',
+      map: ['###############',
+            '#P..o.#...o...#',
+            '#.###.#.#####.#',
+            '#.#...#.....#.#',
+            '#.#.#####.#.#.#',
+            '#...o.r.#.#.o.#',
+            '#.#.###.#.#.###',
+            '#o..........#E#',
+            '#####.#####...#',
+            '###############'],
+      outro: 'In the bin: a letter you never sent. Pip saves it anyway.' },
+    { title: 'Safe Mode', intro: 'Safe Mode is not safe. A key, a door, a dust bunny and a glitch, in the largest folder on the drive.',
+      map: ['#################',
+            '#P..#.....h...o.#',
+            '#.o.#.###.###...#',
+            '#...D...#...#.x.#',
+            '#.###.#.###.#...#',
+            '#.#K..#...o.#.#.#',
+            '#.#####.###.#.#.#',
+            '#.o...x...g.....#',
+            '#.###.#####.###.#',
+            '#...o.......#..E#',
+            '#################'],
+      outro: 'The glitch stops chasing. Its static clears, and inside it you see a school photo, an essay, a treehouse. Your memories. The ones nobody saved.' },
+    { title: 'The Last Save', intro: 'The glitches were never eating the files. They are the memories that were left behind, trying to get onto the floppy too. Lead them home: collect every spark and reach the disk.',
+      map: ['###################',
+            '#P...#.....o.....x#',
+            '#.o..#.###.###.#..#',
+            '#....1.#.....#.#.o#',
+            '#.####.#.#g#.#.#..#',
+            '#...o..#.#.#...#..#',
+            '#.x.####.#.#####.##',
+            '#........#..r..#..#',
+            '#.###.##.####.##.o#',
+            '#o.....2......g..E#',
+            '###################'],
+      outro: 'The floppy clicks. 11:59 PM. Everything fits, even the parts that were broken.' }
   ];
+
   const ending = ['The screen glows one last time.',
     'You did not need to stay in the past to keep it.',
     'Some things are worth saving twice.',
-    'Thanks for playing AFTER SCHOOL \u201999: THE LAST SAVE.'];
-  const api = { missions, ending };
+    'Thanks for playing AFTER SCHOOL ’99: THE LAST SAVE.'];
+
+  function actOf(i) {
+    let a = acts[0];
+    for (const x of acts) if (i >= x.from) a = x;
+    return a;
+  }
+
+  const api = { missions: missions, ending: ending, opening: opening, acts: acts, actOf: actOf };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Missions = api;
 })(typeof window !== 'undefined' ? window : globalThis);
