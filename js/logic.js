@@ -60,10 +60,10 @@
       if (s.echoRecording) {
         n.echoRecording = false;
         n.echoActive = false;
-        if (s.echoRoute.length) { n.echoGhost = s.body[0].slice(); n.echoCursor = 0; }
+        if (s.echoRoute.length) { n.echoGhost = s.body[0].slice(); n.echoPlayback = s.echoRoute.slice(); n.echoCursor = 0; }
       } else {
         if (echoAtSwitch(s.L, s.body[0])) { n.echoActive = true; n.events.push('echoOn'); }
-        else { n.echoRecording = true; n.echoRoute = []; n.echoGhost = null; n.echoActive = false; }
+        else { n.echoRecording = true; n.echoRoute = []; n.echoGhost = null; n.echoPlayback = null; n.echoActive = false; }
       }
     } else return s;
     n.events.push(name);
@@ -143,8 +143,8 @@
     }
     if (cell(L, nx, ny) === 'K' && !s.hasKey) { n.hasKey = true; n.events.push('key'); }
     if (s.echoRecording) n.echoRoute = s.echoRoute.concat(dirName).slice(-16);
-    if (s.echoGhost && s.echoCursor < s.echoRoute.length) {
-      const ed = DIRS[s.echoRoute[s.echoCursor]];
+    if (s.echoGhost && s.echoCursor < s.echoPlayback.length) {
+      const ed = DIRS[s.echoPlayback[s.echoCursor]];
       n.echoGhost = [s.echoGhost[0] + ed[0], s.echoGhost[1] + ed[1]];
       n.echoCursor = s.echoCursor + 1;
       if (echoAtSwitch(L, n.echoGhost)) { n.echoActive = true; n.events.push('echoOn'); }
@@ -176,7 +176,7 @@
   function key(s) {
     return s.body.map(p => p.join(',')).join(';') + '|' + s.mask + (s.hasKey ? 'k' : '') +
       '|' + s.bugs.map(b => [b.x,b.y,b.dx,b.dy].join(',')).join(';') +
-      '|' + [s.braking ? 1 : 0, s.phase, s.phaseArmed ? 1 : 0, s.echoRecording ? 1 : 0,
+      '|' + [s.phase, s.phaseArmed ? 1 : 0, s.echoRecording ? 1 : 0,
         s.echoRoute.join('.'), s.echoGhost ? s.echoGhost.join(',') : '', s.echoCursor || 0,
         s.echoActive ? 1 : 0, s.anchor ? s.anchor.join(',') : ''].join('|');
   }
