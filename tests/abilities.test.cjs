@@ -11,7 +11,7 @@ test('normal movement grows on a spark and permits entering a departing tail', (
   const grown = L.step(s, 'right');
   assert.equal(grown.got, 1);
   assert.equal(L.step(grown, 'left').status, 'play', 'the departing tail is legal');
-  assert.equal(L.step(L.step(grown, 'left'), 'right').status, 'play');
+  assert.equal(L.step(L.step(grown, 'left'), 'right').status, 'won', 'the return route reaches the exit');
 });
 
 test('Brake toggles and its deterministic meter exhausts and recovers', () => {
