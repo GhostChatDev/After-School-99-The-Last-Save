@@ -110,6 +110,10 @@
   function legacyKey(s) { return s.body.map(p => p.join(',')).join(';') + '|' + s.mask + (s.hasKey ? 'k' : '') + '|' + s.bugs.map(b => b.x + ',' + b.y + ',' + b.dx + b.dy).join(';'); }
 
   function step(s, dirName, legacy) {
+    if (dirName && typeof dirName === 'object') {
+      if (dirName.kind === 'ability') return ability(s, dirName.value);
+      dirName = dirName.value;
+    }
     if (legacy) return legacyStep(s, dirName);
     if (s.status !== 'play') return s;
     const L = s.L, d = DIRS[dirName];
@@ -128,7 +132,7 @@
       n.phase = 0; n.phaseArmed = false; n.events.push('phaseUsed');
     }
     if (c === 'A' && !s.anchor) return die('anchor');
-    if (c === 'E' && (s.got < s.total || (L.echoSwitches.length && !s.echoActive))) return die('gate');
+    if (c === 'E' && (s.got < s.total || (L.echoSwitches.length && !s.echoActive && !s.echoRecording && !(s.echoGhost && echoAtSwitch(L, s.echoGhost))))) return die('gate');
     if (c === '1' || c === '2') { const o = L.portals[c === '1' ? '2' : '1']; nx = o[0]; ny = o[1]; n.events.push('portal'); }
     const fi = L.frags.findIndex(f => same(f, [nx, ny]));
     const ate = fi >= 0 && !(s.mask & (1 << fi));

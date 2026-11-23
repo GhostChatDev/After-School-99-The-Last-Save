@@ -23,6 +23,9 @@ canvas{display:block;width:100%;height:auto;image-rendering:pixelated;touch-acti
 .card h2{margin:0;font:700 24px/1.2 "Courier New",monospace;color:var(--accent)}
 .card p{margin:0;max-width:44ch;color:var(--text)}
 .card .tag{color:var(--pip);font-style:italic}
+.card{overflow-y:auto;justify-content:safe center}
+@media (min-width:600px){.stage:has(.picker-grid){min-height:620px}.picker-grid{max-height:460px;overflow-y:auto}}
+@media (max-width:599px){.card:has(.picker-grid){justify-content:flex-start}.picker-grid{flex-shrink:0}}
 .row{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
 .picker-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:min(100%,420px);gap:8px}
 .picker-grid button{min-width:0;padding:8px;font-size:13px}
@@ -87,7 +90,7 @@ button.ghost{background:var(--panel);color:var(--text);border:2px solid var(--bo
       <button class="pad-btn d" data-d="down" aria-label="Down">▼</button>
     </div>
   </div>
-  <p class="help">Left/Right thumb corners, swipe on board, or Arrow keys / WASD. Tap “Controls” to switch Split / Left / Right.</p>
+  <p class="help">Move: Arrow keys / WASD, swipe or thumb buttons. Abilities: B Brake, F Phase, R Echo, Z Anchor. Esc pauses.</p>
 </main>
 <script src="js/logic.js"></script>
 <script src="js/campaign.js"></script>
@@ -95,7 +98,7 @@ button.ghost{background:var(--panel);color:var(--text);border:2px solid var(--bo
 <script>
 (function(){
 'use strict';
-const M=Missions.missions,END=Missions.ending,SAVE='after-school-99-last-save-v1',CELL=40;
+const M=Missions.missions.concat(LaterMissions),END=Missions.ending,SAVE='after-school-99-last-save-v1',CELL=40;
 const $=id=>document.getElementById(id);
 const cv=$('cv'),ctx=cv.getContext('2d'),card=$('card');
 let save={mission:0,finished:false},idx=0,L,S,dir='right',running=false,mode='step',sound=true,ctrl='split',over=true,last=0,acc=0,audio=null;
@@ -183,7 +186,7 @@ function applyCtrl(){
 function hud(){$('hMission').textContent='Mission '+(idx+1)+'/'+M.length;$('hMem').textContent=S?'Memories '+S.got+'/'+S.total:'Memories —';
  $('bMode').textContent='Mode: '+(mode==='step'?'Step':'Classic');$('bCtrl').textContent='Controls: '+CTRL_NAMES[ctrl];$('bSound').textContent='Music & SFX: '+(sound?'On':'Off');
  $('bBrake').textContent='Brake: '+(S&&S.braking?'On':'Off')+' (B)';$('bPhase').textContent='Phase: '+(S&&S.phaseArmed?'Armed':S&&S.phase?'Ready':'Used')+' (F)';$('bEcho').textContent='Echo: '+(S&&S.echoRecording?'Recording':'Record/Release')+' (R)';$('bAnchor').textContent=S&&S.anchor?'Release Anchor (Z)':'Anchor (Z)';applyCtrl()}
-const WHY={wall:'Pip bumped into a wall.',spike:'Pip touched a corrupted red sector!',self:'Pip tangled up in itself.',dust:'A dust bunny got Pip!',door:'The door is locked. Find the key first.',gate:'The exit stays shut until every memory is collected.'};
+const WHY={wall:'Pip bumped into a wall.',spike:'Pip touched a corrupted red sector!',self:'Pip tangled up in itself.',dust:'A dust bunny got Pip!',door:'The door is locked. Find the key first.',gate:'Collect every memory and activate Echo if this exit needs it.',phase:'Arm Phase with F before crossing a glowing gate.',anchor:'This door needs an active anchor. Stand on a and press Z.'};
 function move(d){
   if(over||!S)return;
   if(mode==='classic'){const o={up:'down',down:'up',left:'right',right:'left'};if(S.body.length>1&&o[d]===dir)return;dir=d;running=true;return}
@@ -269,6 +272,10 @@ function draw(t){
     else if(c==='D'){ctx.fillStyle=S.hasKey?'rgba(255,216,74,.22)':'#b5651d';ctx.fillRect(px+5,py+4,CELL-10,CELL-8);ctx.strokeStyle='#ffd84a';ctx.lineWidth=2;ctx.strokeRect(px+6,py+5,CELL-12,CELL-10);if(!S.hasKey){ctx.fillStyle='#ffd84a';ctx.fillRect(px+CELL/2-4,py+CELL/2-4,8,8)}}
     else if(c==='K'&&!S.hasKey){ctx.fillStyle='#ffd84a';ctx.beginPath();ctx.arc(px+14,py+CELL/2,8*pulse,0,7);ctx.fill();ctx.fillRect(px+18,py+CELL/2-3,16,6);ctx.fillRect(px+28,py+CELL/2,4,10)}
     else if(c==='E'){const open=S.got>=S.total&&(!L.echoSwitches.length||S.echoActive);ctx.fillStyle=open?'#4dffb5':'#4a2438';ctx.fillRect(px+3,py+3,CELL-6,CELL-6);ctx.strokeStyle=open?'#fff7b0':'#ff6b81';ctx.lineWidth=2;ctx.strokeRect(px+4,py+4,CELL-8,CELL-8);ctx.fillStyle=open?'#0a0f20':'#ff9ebb';ctx.font='bold 14px "Courier New",monospace';ctx.textAlign='center';ctx.fillText(open?'SAVE':'LOCK',px+CELL/2,py+CELL/2+5);ctx.textAlign='start'}
+    else if(c==='G'){ctx.fillStyle='#62478c';ctx.fillRect(px+12,py+3,CELL-24,CELL-6);ctx.strokeStyle='#d8c4ff';ctx.lineWidth=2;ctx.strokeRect(px+11,py+4,CELL-22,CELL-8)}
+    else if(c==='s'){ctx.fillStyle=S.echoActive?'#4dffb5':'#ff9bf0';ctx.beginPath();ctx.arc(px+CELL/2,py+CELL/2,10,0,7);ctx.fill();ctx.fillStyle='#11172c';ctx.font='bold 14px monospace';ctx.fillText('E',px+16,py+25)}
+    else if(c==='a'){ctx.strokeStyle='#7ad8ff';ctx.lineWidth=3;ctx.beginPath();ctx.arc(px+CELL/2,py+CELL/2,12,0,7);ctx.stroke()}
+    else if(c==='A'){ctx.fillStyle=S.anchor?'#4dffb5':'#5b7690';ctx.fillRect(px+5,py+4,CELL-10,CELL-8);ctx.fillStyle='#11172c';ctx.font='bold 20px monospace';ctx.fillText('A',px+14,py+27)}
     else if(c==='1'||c==='2'){ctx.strokeStyle=c==='1'?'#ff9bf0':'#7ad8ff';ctx.lineWidth=3.5;ctx.beginPath();ctx.arc(px+CELL/2,py+CELL/2,13*pulse,0,7);ctx.stroke();ctx.beginPath();ctx.arc(px+CELL/2,py+CELL/2,6/pulse,0,7);ctx.stroke()}
   }
   L.frags.forEach((f,i)=>{if(S.mask&(1<<i))return;const cx=f[0]*CELL+CELL/2,cy=f[1]*CELL+CELL/2;
@@ -276,6 +283,7 @@ function draw(t){
     ctx.fillStyle='#ffd84a';ctx.fillRect(cx-10*pulse,cy-10*pulse,20*pulse,20*pulse);
     ctx.fillStyle='#11172c';ctx.fillRect(cx-6*pulse,cy-9*pulse,12*pulse,6*pulse);
     ctx.fillStyle='#fff7b0';ctx.fillRect(cx-7*pulse,cy+1*pulse,14*pulse,8*pulse)});
+  if(S.echoGhost){const p=S.echoGhost;ctx.globalAlpha=.55;ctx.fillStyle='#ff9bf0';ctx.fillRect(p[0]*CELL+7,p[1]*CELL+7,CELL-14,CELL-14);ctx.globalAlpha=1}
   S.bugs.forEach(b=>{const cx=b.x*CELL+CELL/2,cy=b.y*CELL+CELL/2;
     ctx.fillStyle='#d8c4ff';ctx.beginPath();ctx.arc(cx,cy,13*pulse,0,7);ctx.fill();
     ctx.fillStyle='#9b7ede';ctx.beginPath();ctx.arc(cx-7,cy-10,5,0,7);ctx.arc(cx+7,cy-10,5,0,7);ctx.fill();
@@ -293,7 +301,7 @@ function frame(t){
 requestAnimationFrame(frame);
 title();
 if('serviceWorker' in navigator&&location.protocol.startsWith('http'))addEventListener('load',()=>{
-  navigator.serviceWorker.register('sw.js?v=12',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{});
+  navigator.serviceWorker.register('sw.js?v=13',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{});
   let refreshing=false;
   navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!refreshing){refreshing=true;location.reload()}});
 });

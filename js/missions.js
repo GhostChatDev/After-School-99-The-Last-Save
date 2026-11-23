@@ -138,9 +138,7 @@
     'You did not need to stay in the past to keep it.',
     'Some things are worth saving twice.',
     'Thanks for playing AFTER SCHOOL \u201999: THE LAST SAVE.'];
-  // Keep the original twelve missions stable; the later campaign is separate for testing.
-  const later = typeof module !== 'undefined' && module.exports ? require('./campaign.js') : root.LaterMissions;
-  if (Array.isArray(later)) missions.push(...later);
+  // Keep the original twelve-mission module API stable for existing consumers.
   const api = { missions, ending };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Missions = api;
 })(typeof window !== 'undefined' ? window : globalThis);
