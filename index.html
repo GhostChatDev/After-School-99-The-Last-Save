@@ -97,7 +97,7 @@ button.ghost{background:var(--panel);color:var(--text);border:2px solid var(--bo
 const M=Missions.missions,END=Missions.ending,SAVE='after-school-99-last-save-v1',CELL=40;
 const $=id=>document.getElementById(id);
 const cv=$('cv'),ctx=cv.getContext('2d'),card=$('card');
-let save={mission:0,finished:false},idx=0,L,S,dir='right',running=false,mode='step',sound=true,ctrl='split',over=true,last=0,acc=0,audio=null;
+let save={mission:0,finished:false},idx=0,L,S,dir='right',running=false,mode='step',sound=true,ctrl='split',over=true,last=0,acc=0,audio=null,selectedAction=0;
 const CTRLS=['split','left','right'],CTRL_NAMES={split:'Split',left:'Left Pad',right:'Right Pad'};
 try{const s=JSON.parse(localStorage.getItem(SAVE));if(s&&Number.isInteger(s.mission)&&s.mission>=0&&s.mission<M.length)save={mission:s.mission,finished:s.finished===true};
  const o=JSON.parse(localStorage.getItem(SAVE+'-opts'));if(o){mode=o.mode==='classic'?'classic':'step';sound=o.sound!==false;if(CTRLS.includes(o.ctrl))ctrl=o.ctrl}}catch(e){}
@@ -136,15 +136,36 @@ function showCard(title,text,buttons,tag){
   (Array.isArray(text)?text:[text]).forEach(t=>{const p=document.createElement('p');p.textContent=t;card.appendChild(p)});
   if(tag){const p=document.createElement('p');p.className='tag';p.textContent=tag;card.appendChild(p)}
   const row=document.createElement('div');row.className='row';
-  buttons.forEach((b,i)=>{const e=document.createElement('button');e.textContent=b[0];if(b[2])e.className='ghost';e.onclick=b[1];row.appendChild(e);if(i===0)setTimeout(()=>e.focus(),0)});
+  buttons.forEach((b,i)=>{const e=document.createElement('button');e.textContent=b[0];if(b[2])e.className='ghost';e.onclick=b[1];row.appendChild(e)});
+  card.dataset.screen=title==='The Last Save'?'title':'card';
+  selectAction(0);
   card.appendChild(row);
 }
 function hideCard(){card.classList.add('hidden');over=false}
+function selectAction(delta=0){
+  const actions=[...card.querySelectorAll('.row button')];
+  if(!actions.length)return;
+  selectedAction=(selectedAction+delta+actions.length)%actions.length;
+  actions.forEach((e,i)=>e.setAttribute('aria-pressed',String(i===selectedAction)));
+  actions[selectedAction].focus({preventScroll:true});
+}
+function menuAction(){
+  if(over){eActivate();return}
+  if(L)missionPicker(true);
+  else title();
+}
+function eActivate(){
+  const action=card.querySelectorAll('.row button')[selectedAction];
+  if(action)action.click();
+}
+function howToPlay(){
+  showCard('How to Play',['Guide Pip through each memory. Collect every memory, then reach the exit.','Use the arrow buttons, swipe, or Arrow keys / WASD. A starts or chooses. ? opens this guide. ☰ opens the menu.','Avoid walls, red corrupted sectors, dust bunnies, and your own tail. Find keys before locked doors.'],[['Back to title',title]]);
+}
 function title(){
   $('game').classList.add('hidden');$('pad').classList.add('hidden');
   const b=[['New game',()=>{save={mission:0,finished:save.finished};store();startMission(0)}]];
   if(save.mission>0)b.unshift(['Continue: mission '+(save.mission+1),()=>startMission(save.mission)]);
-  b.push(['Choose mission',()=>missionPicker(false),1]);
+  b.push(['Choose mission',()=>missionPicker(false),1],['How to Play',howToPlay,1]);
   showCard('The Last Save',['Deep inside the old family computer, a tiny glowing ribbon named Pip wakes up.','Collect memories, grow longer, and find your way out of each one.'],b,'“Some things are worth saving twice.”'+(save.finished?'  ★ Completed':''));
 }
 function missionPicker(fromGame=true){
@@ -183,6 +204,7 @@ function hud(){$('hMission').textContent='Mission '+(idx+1)+'/'+M.length;$('hMem
  $('bMode').textContent='Mode: '+(mode==='step'?'Step':'Classic');$('bCtrl').textContent='Controls: '+CTRL_NAMES[ctrl];$('bSound').textContent='Music & SFX: '+(sound?'On':'Off');applyCtrl()}
 const WHY={wall:'Pip bumped into a wall.',spike:'Pip touched a corrupted red sector!',self:'Pip tangled up in itself.',dust:'A dust bunny got Pip!',door:'The door is locked. Find the key first.',gate:'The exit stays shut until every memory is collected.'};
 function move(d){
+  if(over&&card.dataset.screen==='title'){selectAction(d==='left'||d==='up'?-1:1);return}
   if(over||!S)return;
   if(mode==='classic'){const o={up:'down',down:'up',left:'right',right:'left'};if(S.body.length>1&&o[d]===dir)return;dir=d;running=true;return}
   dir=d;running=true;tick();
@@ -199,16 +221,23 @@ function tick(){
       else showCard('The End',M[idx].outro.split('\n').concat(END),[['Play again',()=>{save.mission=0;store();startMission(0)}],['Menu',title,1]],'“Some things are worth saving twice.”');
     },450)}
 }
-const KEYS={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',s:'down',a:'left',d:'right',W:'up',S:'down',A:'left',D:'right'};
+const KEYS={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',s:'down',d:'right',W:'up',S:'down',D:'right'};
 addEventListener('keydown',e=>{
-  if(e.metaKey||e.ctrlKey||e.altKey)return;
-  if(KEYS[e.key]){if(!over){e.preventDefault();move(KEYS[e.key])}}
+  if(e.metaKey||e.ctrlKey||e.altKey||e.repeat)return;
+  if(e.key==='?'){e.preventDefault();howToPlay()}
+  else if(e.key==='Escape'){e.preventDefault();title()}
+  else if(e.key==='m'||e.key==='M'){e.preventDefault();menuAction()}
+  else if(e.key==='a'||e.key==='A'){e.preventDefault();eActivate()}
+  else if(KEYS[e.key]){e.preventDefault();move(KEYS[e.key])}
+  else if(e.key==='Enter'&&over){e.preventDefault();eActivate()}
+  else if(e.key===' '&&!over){e.preventDefault();move(S.dir)}
   else if((e.key==='r'||e.key==='R')&&L&&!over)restart();
 });
 document.querySelectorAll('#pad button').forEach(b=>{
   let pMoved=false;
-  b.addEventListener('pointerdown',e=>{if(e.pointerType==='touch'||e.pointerType==='pen'){e.preventDefault();unlockAudio();pMoved=true;move(b.dataset.d)}});
-  b.addEventListener('click',e=>{e.preventDefault();unlockAudio();if(pMoved){pMoved=false;return}move(b.dataset.d)});
+  const press=()=>{unlockAudio();if(b.dataset.action==='help')howToPlay();else if(b.dataset.action==='activate')eActivate();else if(b.dataset.action==='menu')menuAction();else move(b.dataset.d)};
+  b.addEventListener('pointerdown',e=>{if(e.pointerType==='touch'||e.pointerType==='pen'){e.preventDefault();pMoved=true;press()}});
+  b.addEventListener('click',e=>{e.preventDefault();if(pMoved){pMoved=false;return}press()});
 });
 let tx=0,ty=0;
 cv.addEventListener('touchstart',e=>{const t=e.changedTouches[0];tx=t.clientX;ty=t.clientY},{passive:true});
