@@ -177,7 +177,7 @@
     return s.body.map(p => p.join(',')).join(';') + '|' + s.mask + (s.hasKey ? 'k' : '') +
       '|' + s.bugs.map(b => [b.x,b.y,b.dx,b.dy].join(',')).join(';') +
       '|' + [s.phase, s.phaseArmed ? 1 : 0, s.echoRecording ? 1 : 0,
-        s.echoRoute.join('.'), s.echoGhost ? s.echoGhost.join(',') : '', s.echoCursor || 0,
+        s.echoActive ? s.echoRoute.join('.') : '', s.echoActive && s.echoGhost ? s.echoGhost.join(',') : '', s.echoActive ? s.echoCursor || 0 : 0,
         s.echoActive ? 1 : 0, s.anchor ? s.anchor.join(',') : ''].join('|');
   }
 
