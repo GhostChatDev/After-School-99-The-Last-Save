@@ -1,4 +1,4 @@
-const CACHE = 'after-school-99-last-save-v13';
+const CACHE = 'after-school-99-last-save-v14';
 const FILES = ['./', './index.html', './style.css', './css/game.css', './manifest.webmanifest', './icon.svg', './js/logic.js', './js/missions.js', './js/audio.js', './js/shop.js', './js/game.js'];
 self.addEventListener('install', event => {
   self.skipWaiting();

@@ -592,5 +592,7 @@
   const date = document.getElementById('dateLabel');
   if (date) date.textContent = 'NOV 23, 1999';
   if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(function () {});
+  // iPhone Safari ignores user-scalable=no: stop its pinch and double-tap zoom here.
+  ['gesturestart', 'gesturechange', 'dblclick'].forEach(function (n) { document.addEventListener(n, function (e) { e.preventDefault(); }, { passive: false }); });
   boot();
 })();
