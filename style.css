@@ -31,3 +31,5 @@
 .closet-card .cost{font-size:13px;color:var(--muted)}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 body.reduce-motion *{transition:none!important}
+/* No page zoom on phones: pinch and double-tap zoom are off; the screen and the touch controls take every touch as game input. */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;touch-action:pan-x pan-y}#screen,.controller{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
