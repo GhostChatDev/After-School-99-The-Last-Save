@@ -14,7 +14,6 @@ test('index.html loads the desktop scripts and stylesheet', () => {
   assert.match(html, /<script[^>]+src="js\/desktop\.js"/, 'js/desktop.js must be loaded');
   assert.match(html, /<script[^>]+src="js\/desktop-ui\.js"/, 'js/desktop-ui.js must be loaded');
   assert.match(html, /css\/desktop\.css/, 'css/desktop.css must be loaded');
-  // desktop must be loaded before game.js so window.Desktop exists
   assert.ok(html.indexOf('js/desktop.js') < html.indexOf('src="js/game.js"'), 'desktop.js must come before game.js');
 });
 
@@ -27,7 +26,7 @@ test('index.html has the desktop root and the CRT glass element', () => {
 test('game.js uses the desktop hooks instead of skipping them', () => {
   const game = read('js/game.js');
   for (const hook of ['play', 'quit', 'closet', 'story', 'toggleCrt', 'toggleSound']) {
-    assert.match(game, new RegExp(hook + '\\s*[:,=]'), `hook ${hook} must be passed to Desktop.create`);
+    assert.match(game, new RegExp(hook + '\\s*[:,=]'), 'hook ' + hook + ' must be passed to the desktop');
   }
   assert.match(game, /DesktopUI\.create/, 'game.js must create the desktop');
   assert.match(game, /powerOff|power-off|shrink/i, 'quitting must run the power-off shrink');
@@ -44,6 +43,6 @@ test('offline cache bumped and lists the new files', () => {
   const sw = read('sw.js');
   assert.match(sw, /v15/, 'cache version must be bumped to v15');
   for (const f of ['js/desktop.js', 'js/desktop-ui.js', 'css/desktop.css']) {
-    assert.ok(sw.includes(f), `sw.js must cache ${f}`);
+    assert.ok(sw.includes(f), 'sw.js must cache ' + f);
   }
 });
