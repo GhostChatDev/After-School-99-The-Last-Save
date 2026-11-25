@@ -263,6 +263,14 @@
     text(L.title.toUpperCase(), W / 2, HUD / 2, 16, pal.glow, 'center');
     const keyBit = L.def.map.join('').indexOf('K') >= 0 ? (state.hasKey ? '  KEY ✓' : '  KEY …') : '';
     text('✦ ' + state.got + '/' + state.total + keyBit + '   STEPS ' + state.moves, W - 14, HUD / 2, 16, '#ffd76e', 'right');
+    // Act III runs against the clock: one step is one second toward 00:00 01/01/2000.
+    if (window.Desktop && window.Desktop.isActThree(missionIndex)) {
+      const cd = window.Desktop.countdownTo2000(missionIndex, state.moves || 0);
+      g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(0, HUD, 236, 30);
+      g.fillStyle = cd.midnight ? '#ff6b6b' : '#8de0dc'; g.fillRect(0, HUD, 236, 2);
+      text('Y2K ' + cd.clock, 12, HUD + 17, 15, cd.midnight ? '#ff6b6b' : '#8de0dc');
+      text(cd.date, 228, HUD + 17, 13, '#b9afd0', 'right');
+    }
     if (state.events.indexOf('near') >= 0 || nearGlitch()) {
       if (Math.floor(t / 250) % 2) text('! GLITCH NEAR !', W / 2, HUD + 18, 14, '#ff5a5a', 'center');
     }
@@ -313,6 +321,17 @@
     g.globalAlpha = 1;
     g.setTransform(1, 0, 0, 1, 0, 0);
     drawHud(t, pal);
+    // Act III finale: the Millennium Bug, a short glitch over the same board (never in reduced-motion).
+    if (!reduceMotion && window.Desktop && window.Desktop.isMillenniumBug(missionIndex, M.missions) && Math.sin(t / 520) > 0.7) {
+      for (let i = 0; i < 5; i++) {
+        const y = Math.random() * H, h = 2 + Math.random() * 10;
+        g.globalAlpha = 0.35;
+        g.fillStyle = ['#8de0dc', '#f29ab2', '#ffd477'][i % 3];
+        g.fillRect(Math.random() * 60 - 30, y, W, h);
+      }
+      g.globalAlpha = 1;
+      if (Math.floor(t / 260) % 2) text('MILLENNIUM BUG', W / 2, H - 12, 14, '#ff6b6b', 'center');
+    }
     if (flash > 0) { g.globalAlpha = flash; g.fillStyle = flashColor; g.fillRect(0, 0, W, H); g.globalAlpha = 1; flash = Math.max(0, flash - 0.06); }
   }
 
