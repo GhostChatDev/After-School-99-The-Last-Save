@@ -1,5 +1,5 @@
-const CACHE = 'after-school-99-last-save-v14';
-const FILES = ['./', './index.html', './style.css', './css/game.css', './manifest.webmanifest', './icon.svg', './js/logic.js', './js/missions.js', './js/audio.js', './js/shop.js', './js/game.js'];
+const CACHE = 'after-school-99-last-save-v15';
+const FILES = ['./', './index.html', './style.css', './css/game.css', './css/desktop.css', './manifest.webmanifest', './icon.svg', './js/logic.js', './js/missions.js', './js/audio.js', './js/shop.js', './js/desktop.js', './js/desktop-ui.js', './js/game.js'];
 self.addEventListener('install', event => {
   self.skipWaiting();
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES)));

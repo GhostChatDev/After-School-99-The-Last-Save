@@ -1,0 +1,148 @@
+/* FC-99 OS: an original 1990s desktop (chunky bevels, folder icons, a Start bar)
+   plus the optional CRT switch (scanlines, curved glass, glow, slow flicker, power-off dot).
+   Everything is drawn in CSS: no images, no outside fonts. */
+
+/* ---------- desktop ---------- */
+.desktop{position:absolute;inset:0;overflow:hidden;color:#f4efdc;
+  background:radial-gradient(120% 90% at 50% 110%,#2c5b4a,#123027 55%,#0a1b18);
+  font-family:"Courier New",monospace;-webkit-user-select:none;user-select:none;
+  display:flex;flex-direction:column;z-index:3}
+.desktop[hidden]{display:none}
+.desk-wall{position:absolute;inset:0;background-image:
+  repeating-linear-gradient(0deg,rgba(255,255,255,.03) 0 1px,transparent 1px 4px);
+  pointer-events:none}
+.desk-window-back{position:absolute;right:6%;top:14%;width:38%;height:46%;border:3px solid #6f8f85;
+  background:rgba(10,30,26,.45);box-shadow:inset 2px 2px #0a1b18,inset -2px -2px #8fbfb0;pointer-events:none}
+.desk-icons{position:relative;z-index:2;display:grid;--cols:4;grid-template-columns:repeat(var(--cols),1fr);
+  gap:6px;padding:12px;align-content:start;flex:1;overflow:auto}
+.desk-icon{display:flex;flex-direction:column;align-items:center;gap:4px;min-height:84px;min-width:80px;
+  padding:8px 4px;background:transparent;border:2px solid transparent;border-radius:4px;color:inherit;
+  font:inherit;cursor:pointer;touch-action:manipulation}
+.desk-icon:hover,.desk-icon:focus-visible{border-color:#ffd76e;background:rgba(255,215,110,.14);outline:none}
+.desk-icon.dim{opacity:.72}
+.desk-folder-icon{position:relative;width:42px;height:32px;display:block}
+.desk-folder-icon .tab{position:absolute;left:0;top:0;width:20px;height:9px;background:#e0a050;
+  border:2px solid #5e3812;border-bottom:0;border-radius:3px 3px 0 0}
+.desk-folder-icon .body{position:absolute;inset:7px 0 0 0;background:#ffd477;
+  border:2px solid #5e3812;border-radius:0 3px 3px 3px;
+  box-shadow:inset 2px 2px #fff3c8,inset -2px -2px #b57a24}
+.desk-label{font:bold 11px/1.2 "Courier New",monospace;letter-spacing:.5px;text-align:center;
+  text-shadow:1px 1px #000,2px 2px rgba(0,0,0,.4)}
+.desk-sub{font-size:9px;color:#b9d6c6}
+.desk-icons{grid-auto-rows:min-content}
+
+/* ---------- windows ---------- */
+.desk-windows{position:absolute;inset:0;z-index:4;display:flex;align-items:center;justify-content:center;
+  padding:16px;pointer-events:none}
+.desk-windows[hidden]{display:none}
+.os-window{pointer-events:auto;width:min(520px,94%);max-height:88%;display:flex;flex-direction:column;
+  background:#efe6cf;color:#221c26;border:3px solid #2b3a33;
+  box-shadow:6px 6px 0 rgba(0,0,0,.45),inset 2px 2px #fffdf2,inset -2px -2px #b9ad94;border-radius:3px}
+.os-titlebar{display:flex;align-items:center;gap:8px;padding:5px 6px;background:linear-gradient(#5d8f7b,#2f5c4d);
+  color:#f7f3dd;border-bottom:2px solid #20302a}
+.os-caption{flex:1;font:bold 11px/1 "Courier New",monospace;letter-spacing:1px;text-shadow:1px 1px #000}
+.os-close{width:22px;height:22px;min-width:22px;border:2px solid #20302a;background:#e8c9b0;color:#2b1a12;
+  font:bold 12px/1 "Courier New",monospace;cursor:pointer}
+.os-close:hover,.os-close:focus-visible{background:#ff8f6b;outline:2px solid #ffd76e}
+.os-body{padding:10px 12px;overflow:auto;font:13px/1.45 "Courier New",monospace}
+.os-body h3{margin:0 0 6px;font-size:14px}
+.os-line{margin:0 0 8px}
+.os-empty{color:#6d6157;font-style:italic}
+.os-note{margin:8px 0 0;font-size:11px;color:#5a5148}
+.os-actions{display:flex;gap:8px;justify-content:flex-end;padding:8px 10px;border-top:2px solid #c3b79c;background:#e3d8bf}
+.os-button{min-height:32px;padding:5px 12px;border:2px outset #cfc3a6;background:#e8dfc8;color:#221c26;
+  font:bold 11px "Courier New",monospace;cursor:pointer;touch-action:manipulation}
+.os-button:hover,.os-button:focus-visible{background:#fbf4de;outline:2px solid #6f9a86}
+.os-button.primary{background:#5d8f7b;color:#f7f3dd;border-color:#3a6353}
+.mission-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}
+.mission-item{width:100%;display:grid;grid-template-columns:26px 1fr auto;gap:8px;align-items:center;
+  min-height:36px;padding:4px 8px;text-align:left;border:2px solid #b9ad94;background:#faf4e2;
+  color:#221c26;font:12px "Courier New",monospace;cursor:pointer;touch-action:manipulation}
+.mission-item:hover:not(:disabled),.mission-item:focus-visible:not(:disabled){background:#fff7d8;border-color:#6f9a86;outline:none}
+.mission-item:disabled{opacity:.55;cursor:not-allowed;background:#e6ddc7}
+.mission-item.cleared .mission-state{color:#2f7f4f}
+.mission-num{font-weight:bold;color:#5d8f7b}
+.mission-state{font-size:10px;letter-spacing:.5px;color:#7a6f62}
+.memory-slip{margin:0 0 8px;padding:7px 9px;background:#fbf5e2;border-left:4px solid #ffd477}
+.memory-slip h3{margin:0 0 3px;font-size:12px}
+.memory-slip p{margin:0;font-size:12px;color:#3a322c}
+.setting-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0;
+  border-bottom:1px dashed #c3b79c;font-size:12px}
+.os-toggle{min-width:64px;min-height:32px;border:2px outset #cfc3a6;background:#e8dfc8;color:#221c26;
+  font:bold 11px "Courier New",monospace;cursor:pointer;touch-action:manipulation}
+.os-toggle[aria-pressed="true"]{background:#5d8f7b;color:#f7f3dd;border-style:inset}
+.os-toggle:focus-visible{outline:2px solid #6f9a86}
+
+/* ---------- Start bar ---------- */
+.taskbar{position:relative;z-index:5;display:flex;align-items:center;gap:8px;padding:4px 6px;
+  background:linear-gradient(#dbd2bb,#a89d86);border-top:2px solid #fffdf2;color:#221c26;
+  box-shadow:0 -2px 0 #6f6552}
+.start-btn{min-height:32px;padding:4px 12px;border:2px outset #fffdf2;background:#e8dfc8;color:#221c26;
+  font:bold 11px "Courier New",monospace;cursor:pointer;touch-action:manipulation}
+.start-btn:hover,.start-btn:focus-visible{background:#fff7d8;outline:2px solid #6f9a86}
+.start-btn[aria-expanded="true"]{border-style:inset}
+.task-note{font:bold 10px "Courier New",monospace;color:#4a4238;letter-spacing:1px}
+.task-clock{margin-left:auto;font:bold 12px "Courier New",monospace;color:#221c26;
+  padding:2px 8px;border:2px inset #cfc3a6;background:#f2ead6;font-variant-numeric:tabular-nums}
+.start-menu{position:absolute;left:6px;bottom:44px;z-index:6;display:flex;flex-direction:column;
+  min-width:210px;padding:3px;background:#efe6cf;border:3px solid #2b3a33;
+  box-shadow:6px 6px 0 rgba(0,0,0,.45)}
+.start-menu[hidden]{display:none}
+.start-item{min-height:32px;padding:6px 10px;text-align:left;border:0;background:transparent;color:#221c26;
+  font:12px "Courier New",monospace;cursor:pointer}
+.start-item:hover,.start-item:focus-visible{background:#5d8f7b;color:#f7f3dd;outline:none}
+.start-clock{padding:5px 10px;border-top:2px solid #c3b79c;margin-top:3px;font:10px "Courier New",monospace;color:#5a5148}
+
+/* ---------- CRT switch ---------- */
+/* Scanlines and glow: on only when the player turns CRT on (never for reduced-motion users). */
+body.crt-on .crt-glass{background:
+  repeating-linear-gradient(0deg,rgba(0,0,0,.34) 0 1px,transparent 1px 3px),
+  radial-gradient(ellipse at center,rgba(160,240,220,.10) 40%,rgba(0,0,0,.55) 100%);
+  mix-blend-mode:multiply;animation:crt-flicker 5.5s steps(1,end) infinite}
+body.crt-on .screen-wrap{box-shadow:inset 0 0 40px rgba(0,0,0,.8),0 0 26px rgba(140,240,214,.45)}
+body.crt-on canvas{filter:saturate(1.12) contrast(1.06) brightness(1.04)}
+/* A slight curve: the glass is a rounded lens and the picture bows outward a touch. */
+body.crt-on .screen-wrap{border-radius:6%/9%}
+body.crt-on canvas{border-radius:6%/9%}
+body.crt-on .crt-glass{border-radius:6%/9%}
+@keyframes crt-flicker{
+  0%,96%,100%{opacity:1}
+  97%{opacity:.9}
+  98%{opacity:1}
+  99%{opacity:.94}
+}
+/* Power-off: the picture shrinks to a bright line, then a dot, then nothing. */
+.screen-wrap.powering-off canvas,.screen-wrap.powering-off .ui,.screen-wrap.powering-off .desktop{
+  animation:power-off 620ms cubic-bezier(.6,0,.9,1) forwards}
+.screen-wrap.powering-off .crt-glass{animation:power-glow 620ms ease-in forwards}
+@keyframes power-off{
+  0%{transform:scale(1,1);filter:brightness(1)}
+  45%{transform:scale(1,.02);filter:brightness(3)}
+  75%{transform:scale(.02,.02);filter:brightness(6)}
+  100%{transform:scale(0,0);filter:brightness(9);opacity:0}
+}
+@keyframes power-glow{
+  0%{opacity:1}
+  60%{opacity:.85;box-shadow:inset 0 0 60px rgba(190,255,240,.9)}
+  100%{opacity:0}
+}
+
+@media (prefers-reduced-motion:reduce){
+  body.crt-on .crt-glass{animation:none}
+  .screen-wrap.powering-off canvas,.screen-wrap.powering-off .ui,.screen-wrap.powering-off .desktop,
+  .screen-wrap.powering-off .crt-glass{animation:none}
+}
+
+/* Phone: bigger touch targets, fewer icons per row, the same chrome. */
+@media (max-width:520px){
+  .desk-icons{--cols:3;gap:4px;padding:8px}
+  .desk-icon{min-height:76px;min-width:64px;padding:6px 2px}
+  .desk-label{font-size:10px}
+  .desk-sub{font-size:8px}
+  .os-window{width:96%;max-height:84%}
+  .os-body{padding:8px;font-size:12px}
+  .taskbar{padding:3px 4px;gap:5px}
+  .task-note{display:none}
+  .start-btn{font-size:10px;padding:4px 8px}
+  .start-menu{min-width:186px}
+}

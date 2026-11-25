@@ -17,7 +17,7 @@
     { id: 'ghost', name: 'Screensaver Ghost', glyph: 'o_o', cost: 26 },
     { id: 'crt', name: 'CRT Glow', glyph: '@_@', cost: 36 }
   ];
-  function blankSave() { return { unlocked: 1, stars: 0, face: 'classic', owned: ['classic'], sound: true, best: {}, seenOpening: false, done: false }; }
+  function blankSave() { return { unlocked: 1, stars: 0, face: 'classic', owned: ['classic'], sound: true, crt: false, best: {}, seenOpening: false, done: false }; }
   function loadSave() {
     const base = blankSave();
     try {
@@ -30,6 +30,7 @@
     base.unlocked = Math.max(1, Math.min(M.missions.length, base.unlocked | 0));
     base.stars = Math.max(0, base.stars | 0);
     if (!base.best || typeof base.best !== 'object') base.best = {};
+    base.crt = base.crt === true && !reduceMotion; // the CRT effect is off for reduced-motion users
     return base;
   }
   let save = loadSave();
@@ -41,6 +42,8 @@
   const ui = document.getElementById('ui');
   const toastBox = document.getElementById('toast');
   const soundButton = document.getElementById('soundButton');
+  const desktopEl = document.getElementById('desktop');
+  const screenWrap = document.querySelector('.screen-wrap');
   const audio = window.Chiptune ? window.Chiptune.create() : null;
   if (audio && !save.sound) audio.setEnabled(false);
   screen.width = W; screen.height = H;
@@ -262,6 +265,14 @@
     text(L.title.toUpperCase(), W / 2, HUD / 2, 16, pal.glow, 'center');
     const keyBit = L.def.map.join('').indexOf('K') >= 0 ? (state.hasKey ? '  KEY ✓' : '  KEY …') : '';
     text('✦ ' + state.got + '/' + state.total + keyBit + '   STEPS ' + state.moves, W - 14, HUD / 2, 16, '#ffd76e', 'right');
+    // Act III runs against the clock: one step is one second toward 00:00 01/01/2000.
+    if (window.Desktop && window.Desktop.isActThree(missionIndex)) {
+      const cd = window.Desktop.countdownTo2000(missionIndex, state.moves || 0);
+      g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(0, HUD, 236, 30);
+      g.fillStyle = cd.midnight ? '#ff6b6b' : '#8de0dc'; g.fillRect(0, HUD, 236, 2);
+      text('Y2K ' + cd.clock, 12, HUD + 17, 15, cd.midnight ? '#ff6b6b' : '#8de0dc');
+      text(cd.date, 228, HUD + 17, 13, '#b9afd0', 'right');
+    }
     if (state.events.indexOf('near') >= 0 || nearGlitch()) {
       if (Math.floor(t / 250) % 2) text('! GLITCH NEAR !', W / 2, HUD + 18, 14, '#ff5a5a', 'center');
     }
@@ -312,6 +323,17 @@
     g.globalAlpha = 1;
     g.setTransform(1, 0, 0, 1, 0, 0);
     drawHud(t, pal);
+    // Act III finale: the Millennium Bug, a short glitch over the same board (never in reduced-motion).
+    if (!reduceMotion && window.Desktop && window.Desktop.isMillenniumBug(missionIndex, M.missions) && Math.sin(t / 520) > 0.7) {
+      for (let i = 0; i < 5; i++) {
+        const y = Math.random() * H, h = 2 + Math.random() * 10;
+        g.globalAlpha = 0.35;
+        g.fillStyle = ['#8de0dc', '#f29ab2', '#ffd477'][i % 3];
+        g.fillRect(Math.random() * 60 - 30, y, W, h);
+      }
+      g.globalAlpha = 1;
+      if (Math.floor(t / 260) % 2) text('MILLENNIUM BUG', W / 2, H - 12, 14, '#ff6b6b', 'center');
+    }
     if (flash > 0) { g.globalAlpha = flash; g.fillStyle = flashColor; g.fillRect(0, 0, W, H); g.globalAlpha = 1; flash = Math.max(0, flash - 0.06); }
   }
 
@@ -400,23 +422,12 @@
     const buttons = [];
     if (save.unlocked > 1 && !save.done) buttons.push(['CONTINUE: MISSION ' + save.unlocked, function () { intro(save.unlocked - 1); }]);
     buttons.push([save.unlocked > 1 ? 'NEW GAME' : 'START', function () { intro(0); }]);
-    buttons.push(['MISSIONS', missions]);
+    buttons.push(['DESKTOP (LEVEL SELECT)', desktop]);
     buttons.push(['FACE CLOSET', closet]);
     buttons.push(['THE STORY', story]);
     panel("AFTER SCHOOL '99", ['THE LAST SAVE', '✦ ' + save.stars + ' stars'], buttons);
   }
-  function missions() {
-    mode = 'title';
-    const grid = el('div', 'mission-grid');
-    M.missions.forEach(function (m, i) {
-      const b = el('button', i === save.unlocked - 1 ? 'current' : '', (i + 1) + (save.best[i] ? ' ✓' : ''));
-      b.type = 'button'; b.title = m.title; b.disabled = i >= save.unlocked;
-      b.setAttribute('aria-label', 'Mission ' + (i + 1) + ': ' + m.title + (i >= save.unlocked ? ' (locked)' : ''));
-      b.addEventListener('click', function () { sfx('select'); intro(i); });
-      grid.appendChild(b);
-    });
-    panel('MISSIONS', ['Finished missions show ✓. Pick any unlocked one.'], [['BACK', title]], { extra: grid });
-  }
+  function missions() { desktop(); }
   function closet() {
     const row = el('div', 'closet-row');
     FACES.forEach(function (fc) {
@@ -435,6 +446,74 @@
     });
     panel('FACE CLOSET', ['Stars: ✦ ' + save.stars + '. Earn stars by clearing missions in few steps.'], [['BACK', title]], { extra: row });
   }
+  /* ---------- the FC-99 OS desktop: the level select ---------- */
+  let desktopUI = null;
+  function crtWanted() { return !reduceMotion && save.crt === true; }
+  function applyCrt() {
+    document.body.classList.toggle('crt-on', crtWanted());
+  }
+  function toggleCrt() {
+    if (reduceMotion) { toast('This device asks for less motion: CRT stays off'); applyCrt(); return false; }
+    save.crt = !save.crt; store(); applyCrt();
+    sfx(save.crt ? 'select' : 'back');
+    toast('CRT effect ' + (save.crt ? 'on' : 'off'));
+    return save.crt;
+  }
+  applyCrt();
+  // The power-off shrink-to-a-dot when you quit, then the action runs (or runs at once in reduced motion).
+  let powering = false;
+  function powerOff(done) {
+    if (reduceMotion || !crtWanted() || !screenWrap || powering) { done(); return; }
+    powering = true;
+    sfx('die');
+    screenWrap.classList.add('powering-off');
+    setTimeout(function () {
+      screenWrap.classList.remove('powering-off');
+      powering = false;
+      done();
+    }, 620);
+  }
+  function buildDesktop() {
+    if (desktopUI || !desktopEl || !window.DesktopUI) return desktopUI;
+    desktopUI = window.DesktopUI.create({
+      root: desktopEl,
+      missions: M.missions,
+      acts: M.acts,
+      getSave: function () { return save; },
+      hooks: {
+        play: function (i) { if (desktopUI) desktopUI.hide(); sfx('select'); intro(i); },
+        // SAVE & EXIT leaves the desktop and goes back to the BIOS: hide it first, or its overlay stays on
+        // screen (and swallows arrows/Escape) while the player is on the title or in a mission.
+        quit: function () { if (desktopUI) desktopUI.hide(); powerOff(function () { boot(); }); },
+        closet: closet,
+        story: story,
+        toggleCrt: toggleCrt,
+        toggleSound: function () { toggleSound(); return save.sound; }
+      }
+    });
+    return desktopUI;
+  }
+  function desktop() {
+    if (!buildDesktop()) { missionsFallback(); return; }
+    hidePanel();
+    mode = 'title';
+    desktopUI.paint();
+    desktopUI.show();
+  }
+  // If the desktop script is missing for any reason, the plain mission grid still works.
+  function missionsFallback() {
+    mode = 'title';
+    const grid = el('div', 'mission-grid');
+    M.missions.forEach(function (m, i) {
+      const b = el('button', i === save.unlocked - 1 ? 'current' : '', (i + 1) + (save.best[i] ? ' ✓' : ''));
+      b.type = 'button'; b.title = m.title; b.disabled = i >= save.unlocked;
+      b.setAttribute('aria-label', 'Mission ' + (i + 1) + ': ' + m.title + (i >= save.unlocked ? ' (locked)' : ''));
+      b.addEventListener('click', function () { sfx('select'); intro(i); });
+      grid.appendChild(b);
+    });
+    panel('MISSIONS', ['Finished missions show ✓. Pick any unlocked one.'], [['BACK', title]], { extra: grid });
+  }
+
   function intro(i) {
     missionIndex = i;
     L = LOGIC.parse(M.missions[i]);
