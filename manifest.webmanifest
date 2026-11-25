@@ -1,0 +1,14 @@
+{
+  "id": "./",
+  "name": "After School ’99: The Last Save",
+  "short_name": "After School ’99",
+  "description": "A nostalgic adventure about the things we carry forward.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#11172c",
+  "theme_color": "#11172c",
+  "icons": [
+    { "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

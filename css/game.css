@@ -1,0 +1,21 @@
+/* Menus over the CRT screen: highlight, typewriter cursor, story panel, memory card. Uses the tokens in style.css. */
+.ui{padding:0;background:#05060dcc}
+.panel{inset:5% 6%;gap:12px;justify-content:safe center}
+.panel.wide{inset:4% 4%}
+.panel-text{display:flex;flex-direction:column;gap:8px;align-items:center}
+.panel-text p{font-family:var(--terminal);font-size:clamp(16px,2.4vw,24px);color:var(--ink);line-height:1.25}
+.panel.wide .panel-text p{text-align:left;align-self:stretch}
+.typing::after{content:"█";margin-left:2px;animation:as99-caret .7s steps(1) infinite;color:var(--green)}
+@keyframes as99-caret{50%{opacity:0}}
+.panel-actions button.selected{outline:3px solid var(--gold);outline-offset:2px;box-shadow:0 0 14px #ffd47766}
+.panel-actions button{transition:transform .08s}
+.panel-actions button.selected:not(.primary){color:var(--gold)}
+.memory-card{max-width:520px;margin:4px 0;text-align:left;animation:as99-card .5s ease-out}
+.memory-card h3{font-family:var(--px);font-size:11px;margin:0 0 8px;color:#6b3a52}
+.memory-card p{margin:0;font-family:var(--terminal);font-size:clamp(17px,2.4vw,23px);color:#3b2a33}
+@keyframes as99-card{from{transform:rotate(-6deg) translateY(30px);opacity:0}to{transform:rotate(-1deg);opacity:1}}
+.mission-grid button{min-width:52px}
+.closet-card{cursor:pointer;color:var(--ink)}
+.closet-card.current{box-shadow:0 0 12px #ffd47755}
+@media(max-width:600px){.panel{inset:2% 2%;padding:8px 10px;gap:6px;border-width:2px}.panel-actions{gap:6px;margin-top:2px}.panel-actions button{font-size:7px;padding:8px;min-height:36px}.panel h2{font-size:10px}.panel-text{gap:2px}.panel-text p{font-size:14px;line-height:1.15}.memory-card{padding:8px;margin:0}.memory-card p{font-size:14px}.mission-grid button,.closet-card{min-height:36px;padding:4px}}
+@media(prefers-reduced-motion:reduce){.typing::after,.memory-card{animation:none}}
