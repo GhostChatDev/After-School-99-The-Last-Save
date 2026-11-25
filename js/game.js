@@ -42,6 +42,8 @@
   const ui = document.getElementById('ui');
   const toastBox = document.getElementById('toast');
   const soundButton = document.getElementById('soundButton');
+  const desktopEl = document.getElementById('desktop');
+  const screenWrap = document.querySelector('.screen-wrap');
   const audio = window.Chiptune ? window.Chiptune.create() : null;
   if (audio && !save.sound) audio.setEnabled(false);
   screen.width = W; screen.height = H;
@@ -420,23 +422,12 @@
     const buttons = [];
     if (save.unlocked > 1 && !save.done) buttons.push(['CONTINUE: MISSION ' + save.unlocked, function () { intro(save.unlocked - 1); }]);
     buttons.push([save.unlocked > 1 ? 'NEW GAME' : 'START', function () { intro(0); }]);
-    buttons.push(['MISSIONS', missions]);
+    buttons.push(['DESKTOP (LEVEL SELECT)', desktop]);
     buttons.push(['FACE CLOSET', closet]);
     buttons.push(['THE STORY', story]);
     panel("AFTER SCHOOL '99", ['THE LAST SAVE', '✦ ' + save.stars + ' stars'], buttons);
   }
-  function missions() {
-    mode = 'title';
-    const grid = el('div', 'mission-grid');
-    M.missions.forEach(function (m, i) {
-      const b = el('button', i === save.unlocked - 1 ? 'current' : '', (i + 1) + (save.best[i] ? ' ✓' : ''));
-      b.type = 'button'; b.title = m.title; b.disabled = i >= save.unlocked;
-      b.setAttribute('aria-label', 'Mission ' + (i + 1) + ': ' + m.title + (i >= save.unlocked ? ' (locked)' : ''));
-      b.addEventListener('click', function () { sfx('select'); intro(i); });
-      grid.appendChild(b);
-    });
-    panel('MISSIONS', ['Finished missions show ✓. Pick any unlocked one.'], [['BACK', title]], { extra: grid });
-  }
+  function missions() { desktop(); }
   function closet() {
     const row = el('div', 'closet-row');
     FACES.forEach(function (fc) {
@@ -455,6 +446,72 @@
     });
     panel('FACE CLOSET', ['Stars: ✦ ' + save.stars + '. Earn stars by clearing missions in few steps.'], [['BACK', title]], { extra: row });
   }
+  /* ---------- the FC-99 OS desktop: the level select ---------- */
+  let desktopUI = null;
+  function crtWanted() { return !reduceMotion && save.crt === true; }
+  function applyCrt() {
+    document.body.classList.toggle('crt-on', crtWanted());
+  }
+  function toggleCrt() {
+    if (reduceMotion) { toast('This device asks for less motion: CRT stays off'); applyCrt(); return false; }
+    save.crt = !save.crt; store(); applyCrt();
+    sfx(save.crt ? 'select' : 'back');
+    toast('CRT effect ' + (save.crt ? 'on' : 'off'));
+    return save.crt;
+  }
+  applyCrt();
+  // The power-off shrink-to-a-dot when you quit, then the action runs (or runs at once in reduced motion).
+  let powering = false;
+  function powerOff(done) {
+    if (reduceMotion || !crtWanted() || !screenWrap || powering) { done(); return; }
+    powering = true;
+    sfx('die');
+    screenWrap.classList.add('powering-off');
+    setTimeout(function () {
+      screenWrap.classList.remove('powering-off');
+      powering = false;
+      done();
+    }, 620);
+  }
+  function buildDesktop() {
+    if (desktopUI || !desktopEl || !window.DesktopUI) return desktopUI;
+    desktopUI = window.DesktopUI.create({
+      root: desktopEl,
+      missions: M.missions,
+      acts: M.acts,
+      getSave: function () { return save; },
+      hooks: {
+        play: function (i) { if (desktopUI) desktopUI.hide(); sfx('select'); intro(i); },
+        quit: function () { powerOff(function () { boot(); }); },
+        closet: closet,
+        story: story,
+        toggleCrt: toggleCrt,
+        toggleSound: function () { toggleSound(); return save.sound; }
+      }
+    });
+    return desktopUI;
+  }
+  function desktop() {
+    if (!buildDesktop()) { missionsFallback(); return; }
+    hidePanel();
+    mode = 'title';
+    desktopUI.paint();
+    desktopUI.show();
+  }
+  // If the desktop script is missing for any reason, the plain mission grid still works.
+  function missionsFallback() {
+    mode = 'title';
+    const grid = el('div', 'mission-grid');
+    M.missions.forEach(function (m, i) {
+      const b = el('button', i === save.unlocked - 1 ? 'current' : '', (i + 1) + (save.best[i] ? ' ✓' : ''));
+      b.type = 'button'; b.title = m.title; b.disabled = i >= save.unlocked;
+      b.setAttribute('aria-label', 'Mission ' + (i + 1) + ': ' + m.title + (i >= save.unlocked ? ' (locked)' : ''));
+      b.addEventListener('click', function () { sfx('select'); intro(i); });
+      grid.appendChild(b);
+    });
+    panel('MISSIONS', ['Finished missions show ✓. Pick any unlocked one.'], [['BACK', title]], { extra: grid });
+  }
+
   function intro(i) {
     missionIndex = i;
     L = LOGIC.parse(M.missions[i]);
