@@ -17,7 +17,7 @@
     { id: 'ghost', name: 'Screensaver Ghost', glyph: 'o_o', cost: 26 },
     { id: 'crt', name: 'CRT Glow', glyph: '@_@', cost: 36 }
   ];
-  function blankSave() { return { unlocked: 1, stars: 0, face: 'classic', owned: ['classic'], sound: true, best: {}, seenOpening: false, done: false }; }
+  function blankSave() { return { unlocked: 1, stars: 0, face: 'classic', owned: ['classic'], sound: true, crt: false, best: {}, seenOpening: false, done: false }; }
   function loadSave() {
     const base = blankSave();
     try {
@@ -30,6 +30,7 @@
     base.unlocked = Math.max(1, Math.min(M.missions.length, base.unlocked | 0));
     base.stars = Math.max(0, base.stars | 0);
     if (!base.best || typeof base.best !== 'object') base.best = {};
+    base.crt = base.crt === true && !reduceMotion; // the CRT effect is off for reduced-motion users
     return base;
   }
   let save = loadSave();
