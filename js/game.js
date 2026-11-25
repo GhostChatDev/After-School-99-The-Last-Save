@@ -482,7 +482,9 @@
       getSave: function () { return save; },
       hooks: {
         play: function (i) { if (desktopUI) desktopUI.hide(); sfx('select'); intro(i); },
-        quit: function () { powerOff(function () { boot(); }); },
+        // SAVE & EXIT leaves the desktop and goes back to the BIOS: hide it first, or its overlay stays on
+        // screen (and swallows arrows/Escape) while the player is on the title or in a mission.
+        quit: function () { if (desktopUI) desktopUI.hide(); powerOff(function () { boot(); }); },
         closet: closet,
         story: story,
         toggleCrt: toggleCrt,
